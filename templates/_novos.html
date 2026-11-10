@@ -1,0 +1,39 @@
+{# Cartão "Novo processo identificado": pergunta ao gestor se a sequência vira processo fixo #}
+{% macro novo_processo(item, editavel, mostrar_resp=True) %}
+{% set c, p = item.c, item.p %}
+<article class="card novo-proc" id="novo-{{ c.id }}-{{ p.assinatura }}">
+  <div class="np-topo">
+    <span class="tag np-tag">Novo processo identificado</span>
+    {% if p.recente %}<span class="tag neutra">começou na parte final da coleta</span>{% endif %}
+  </div>
+  <h3>{{ p.nome_sugerido }} <span class="lead" style="font-weight:400;font-size:14px">(nome sugerido)</span></h3>
+  <p class="lead">
+    {% if mostrar_resp %}<b style="color:var(--ink)">{{ c.nome }}</b> · {{ c.funcao or '' }} · {% endif %}
+    {{ p.ocorrencias }} vezes em {{ p.dias|length }} dias (a partir de {{ fmt_data(p.primeira_vez) }}) · cerca de {{ p.duracao_media }} por vez
+  </p>
+  <div class="fluxo">{% for a in p.aplicativos %}{% if not loop.first %}<span class="seta">→</span>{% endif %}<span class="app">{{ a }}</span>{% endfor %}</div>
+  <details class="np-det">
+    <summary>Ver o que foi observado</summary>
+    <ol class="np-passos">
+      {% for s in p.passos %}<li><b>{{ s.app }}</b> · {{ s.tela }}{% if s.acoes %}<span class="lead"> — {{ s.acoes|map(attribute='texto')|join('; ') }}</span>{% endif %}</li>{% endfor %}
+    </ol>
+  </details>
+  <p class="np-pergunta">Essa sequência é diferente dos processos de {{ c.nome.split()[0] }}. <b>Ela deve virar um processo fixo?</b></p>
+  {% if editavel %}
+  <div class="acoes">
+    {% for valor, rotulo, cls in [('fixo', 'Sim, tornar processo fixo', 'btn'), ('pontual', 'Não, foi algo pontual', 'btn sec')] %}
+    <form method="post" action="{{ url_for('decidir_processo_novo') }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="conta_id" value="{{ c.id }}">
+      <input type="hidden" name="assinatura" value="{{ p.assinatura }}"><input type="hidden" name="decisao" value="{{ valor }}">
+      <input type="hidden" name="volta" value="{{ request.path }}">
+      <button class="{{ cls }}" type="submit">{{ rotulo }}</button>
+    </form>
+    {% endfor %}
+    <button class="btn sec np-depois" type="button" onclick="this.closest('.novo-proc').hidden = true">Decidir depois</button>
+  </div>
+  <p class="lead" style="font-size:13px;margin:0">Processo fixo entra no manual com o passo a passo, nos gráficos e nas sugestões de melhoria. Atividade pontual deixa de aparecer aqui.</p>
+  {% else %}
+  <p class="lead" style="margin:0">O administrador vai decidir se ela entra no seu manual como processo fixo.</p>
+  {% endif %}
+</article>
+{% endmacro %}

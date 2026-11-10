@@ -1,0 +1,164 @@
+{# Gráficos em SVG/HTML puro (sem bibliotecas), desenhados no servidor.
+   Cores: --s1..--s3 identificam processos (sempre na mesma ordem); --danger marca gargalos;
+   mapa de calor usa uma única cor (azul) do claro ao escuro. #}
+
+{% macro barras_h(linhas, unidade='h', vazio='Sem dados.') %}
+  {# linhas: [{rotulo, sub, valor, texto, destaque}] — uma barra por linha, valor no fim #}
+  {% set mx = (linhas|map(attribute='valor')|max) if linhas else 0 %}
+  {% if not linhas or not mx %}<p class="lead">{{ vazio }}</p>{% else %}
+  <div class="gbarras">
+    {% for l in linhas %}
+    <div class="gbarra" title="{{ l.rotulo }}: {{ l.texto }}">
+      <span class="rot"><span class="nome">{{ l.rotulo }}</span>{% if l.sub %}<span class="sub">{{ l.sub }}</span>{% endif %}</span>
+      <span class="trilho"><span class="enc {{ 'destaque' if l.destaque }}" style="width:{{ [(100 * l.valor / mx), 0.8]|max|round(1) }}%"></span></span>
+      <span class="val">{{ l.texto }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endmacro %}
+
+
+{% macro composicao(proc) %}
+  {# barra 100% com as etapas do processo; etapas com gargalo em vermelho #}
+  {% set total = proc.passos|sum(attribute='duracao_media_s') or 1 %}
+  {% set etapas_g = proc.gargalos|map(attribute='etapa')|list %}
+  <div class="comp">
+    <div class="comp-barra" role="img" aria-label="Tempo médio por etapa de {{ proc.documento.nome }}">
+      {% for s in proc.passos %}
+      <span class="seg {{ 'gargalo' if loop.index0 in etapas_g }}" style="flex-grow:{{ s.duracao_media_s }}"
+            title="Etapa {{ loop.index }} · {{ s.app }}: {{ s.duracao_media_s }} s em média ({{ (100 * s.duracao_media_s / total)|round|int }}%)">
+        {% if s.duracao_media_s / total >= 0.12 %}<span class="seg-txt">{{ loop.index }}</span>{% endif %}
+      </span>
+      {% endfor %}
+    </div>
+    <div class="comp-leg">
+      {% for s in proc.passos %}
+      <span class="{{ 'gargalo' if loop.index0 in etapas_g }}"><b>{{ loop.index }}</b> {{ s.app }} · {{ (100 * s.duracao_media_s / total)|round|int }}%</span>
+      {% endfor %}
+    </div>
+  </div>
+{% endmacro %}
+
+
+{% macro empilhadas(dias, processos) %}
+  {# execuções por dia, uma cor por processo (ordem fixa p1, p2, p3...) #}
+  {% set totais = [] %}
+  {% for d in dias %}{% set _ = totais.append(d.por_processo.values()|sum) %}{% endfor %}
+  {% set mx = totais|max or 1 %}
+  <div class="legenda">
+    {% for p in processos[:3] %}<span><i class="sw s{{ loop.index }}"></i>{{ p.documento.nome }}</span>{% endfor %}
+  </div>
+  <div class="gcols">
+    {% for d in dias %}
+    {% set tot = d.por_processo.values()|sum %}
+    <div class="gcol" title="{{ d.dia[8:10] }}/{{ d.dia[5:7] }}: {{ tot }} execução(ões){% for p in processos[:3] %} · {{ d.por_processo.get(p.id, 0) }} {{ p.documento.nome }}{% endfor %}">
+      <span class="val">{{ tot }}</span>
+      <span class="pilha" style="height:{{ (100 * tot / mx)|round(1) }}%">
+        {% for p in processos[:3]|reverse %}{% set n = d.por_processo.get(p.id, 0) %}
+          {% if n %}<span class="s{{ loop.revindex }}" style="flex-grow:{{ n }}"></span>{% endif %}
+        {% endfor %}
+      </span>
+      <span class="rot">{{ d.dia[8:10] }}/{{ d.dia[5:7] }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  <details class="tabela-dados"><summary>Ver tabela</summary>
+    <div class="tabela"><table><thead><tr><th>Dia</th>{% for p in processos[:3] %}<th class="num">{{ p.documento.nome }}</th>{% endfor %}<th class="num">Total</th></tr></thead>
+    <tbody>{% for d in dias %}<tr><td>{{ d.dia[8:10] }}/{{ d.dia[5:7] }}</td>{% for p in processos[:3] %}<td class="num">{{ d.por_processo.get(p.id, 0) }}</td>{% endfor %}<td class="num">{{ d.por_processo.values()|sum }}</td></tr>{% endfor %}</tbody></table></div>
+  </details>
+{% endmacro %}
+
+
+{% macro calor(matriz, horas) %}
+  {% set mx = matriz|map('max')|max or 1 %}
+  {% set dias = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'] %}
+  <div class="calor-wrap">
+    <div class="calor" style="grid-template-columns: 34px repeat({{ horas|length }}, minmax(0, 1fr))">
+      <span></span>{% for h in horas %}<span class="h">{{ h }}h</span>{% endfor %}
+      {% for linha in matriz %}
+        <span class="d">{{ dias[loop.index0] }}</span>
+        {% set dia = dias[loop.index0] %}
+        {% for v in linha %}
+          {% set nivel = 0 if not v else [((v / mx) * 5)|round(0, 'ceil')|int, 1]|max %}
+          <span class="cel n{{ nivel }}" title="{{ dia }} {{ horas[loop.index0] }}h: {{ v }} execução(ões) iniciada(s)">{% if v and nivel >= 4 %}{{ v }}{% endif %}</span>
+        {% endfor %}
+      {% endfor %}
+    </div>
+    <div class="calor-esc"><span>menos</span>{% for n in range(1, 6) %}<i class="cel n{{ n }}"></i>{% endfor %}<span>mais</span></div>
+  </div>
+{% endmacro %}
+
+
+{% macro dispersao(proc) %}
+  {# duração de cada execução ao longo do período, com linha do tempo normal (mediana) #}
+  {% set ex = proc.execucoes %}
+  {% if ex|length >= 2 %}
+  {% set W, H, ml, mr, mt, mb = 640, 220, 46, 12, 12, 26 %}
+  {% set t0 = ex|map(attribute=0)|min %}{% set t1 = ex|map(attribute=0)|max %}
+  {% set dur = ex|map(attribute=1)|list %}
+  {% set ymax0 = ((dur|max) / 60)|round(0, 'ceil') or 1 %}
+  {% set ord = dur|sort %}{% set med = ord[(ord|length) // 2] %}
+  {% set passo_y = [((ymax0 / 4)|round(0, 'ceil'))|int, 1]|max %}
+  {% set ymax = ((ymax0 / passo_y)|round(0, 'ceil')) * passo_y %}
+  {% set sx = (W - ml - mr) / ((t1 - t0) or 1) %}{% set sy = (H - mt - mb) / (ymax * 60) %}
+  <svg class="disp" viewBox="0 0 {{ W }} {{ H }}" role="img" aria-label="Duração de cada execução de {{ proc.documento.nome }}">
+    {% for m in range(0, ymax|int + 1, passo_y) %}
+      {% set y = H - mb - m * 60 * sy %}
+      <line class="grade" x1="{{ ml }}" x2="{{ W - mr }}" y1="{{ y }}" y2="{{ y }}"/>
+      <text class="eixo" x="{{ ml - 6 }}" y="{{ y + 4 }}" text-anchor="end">{{ m }} min</text>
+    {% endfor %}
+    {% set ym = H - mb - med * sy %}
+    <line class="mediana" x1="{{ ml }}" x2="{{ W - mr }}" y1="{{ ym }}" y2="{{ ym }}"/>
+    {% for e in ex %}
+      {% set lento = e[1] >= med * 2 %}
+      <circle class="{{ 'lento' if lento }}" cx="{{ ml + (e[0] - t0) * sx }}" cy="{{ H - mb - e[1] * sy }}" r="4.5">
+        <title>{{ fmt_data(e[0]) }} · {{ (e[1] / 60)|round(1)|string|replace('.', ',') }} min{{ ' · lenta' if lento }}</title></circle>
+    {% endfor %}
+    <text class="rot-med" x="{{ ml + 6 }}" y="{{ ym - 8 }}">normal: {{ (med / 60)|round(1)|string|replace('.', ',') }} min</text>
+    <text class="eixo" x="{{ ml }}" y="{{ H - 6 }}">{{ fmt_data(t0)[:5] }}</text>
+    <text class="eixo" x="{{ W - mr }}" y="{{ H - 6 }}" text-anchor="end">{{ fmt_data(t1)[:5] }}</text>
+  </svg>
+  <div class="legenda"><span><i class="sw s1 bola"></i>execução normal</span><span><i class="sw lento bola"></i>2× ou mais o tempo normal</span><span><i class="sw linha"></i>tempo normal (mediana)</span></div>
+  {% endif %}
+{% endmacro %}
+
+
+{% macro faixas_etapas(proc) %}
+  {# por etapa: faixa do tempo típico (25%–75%), mediana e até onde vão 90% das execuções #}
+  {% set mx = proc.passos|map(attribute='p90_s')|max or 1 %}
+  {% set etapas_g = proc.gargalos|map(attribute='etapa')|list %}
+  <div class="faixas">
+    {% for s in proc.passos %}
+    <div class="faixa-l" title="Etapa {{ loop.index }} · {{ s.app }}: normal {{ s.mediana_s }} s; metade das execuções entre {{ s.p25_s }} e {{ s.p75_s }} s; 90% até {{ s.p90_s }} s">
+      <span class="rot"><b>{{ loop.index }}</b> {{ s.app }}</span>
+      <span class="trilho-f">
+        <span class="bigode" style="left:{{ (100 * s.p25_s / mx)|round(1) }}%; width:{{ (100 * (s.p90_s - s.p25_s) / mx)|round(1) }}%"></span>
+        <span class="caixa {{ 'gargalo' if loop.index0 in etapas_g }}" style="left:{{ (100 * s.p25_s / mx)|round(1) }}%; width:{{ [(100 * (s.p75_s - s.p25_s) / mx), 0.8]|max|round(1) }}%"></span>
+        <span class="med" style="left:{{ (100 * s.mediana_s / mx)|round(1) }}%"></span>
+      </span>
+      <span class="val">{{ s.mediana_s // 60 }}min {{ '%02d' % (s.mediana_s % 60) }}s</span>
+    </div>
+    {% endfor %}
+    <div class="legenda"><span><i class="sw caixa-leg"></i>metade das execuções</span><span><i class="sw linha"></i>até 90% das execuções</span><span><i class="sw med-leg"></i>tempo normal</span></div>
+  </div>
+{% endmacro %}
+
+
+{% macro lista_gargalos(gargalos, mostrar_processo=False) %}
+  {% if not gargalos %}<p class="lead" style="margin:0">Nenhum gargalo identificado: as etapas têm tempo estável e bem distribuído.</p>{% endif %}
+  <div class="gargalos">
+  {% for g in gargalos %}
+    <div class="gargalo-item sev-{{ g.severidade }}">
+      <div class="g-topo">
+        <span class="sev">{{ '▲ Alta' if g.severidade == 'alta' else '● Média' }}</span>
+        <strong>{{ g.titulo }}</strong>
+        {% if mostrar_processo %}<span class="lead">· <a href="{{ g.link }}">{{ g.processo }}</a> · {{ g.responsavel }}</span>{% endif %}
+        {% if g.horas_semana %}<span class="impacto">{{ g.horas_semana|string|replace('.', ',') }} h<small>{{ g.metrica }}</small></span>{% endif %}
+      </div>
+      <p>{{ g.detalhe }}</p>
+      <p class="sug"><b>O que fazer:</b> {{ g.sugestao }}</p>
+    </div>
+  {% endfor %}
+  </div>
+{% endmacro %}

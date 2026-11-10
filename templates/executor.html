@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block titulo %}Executor — TaskMiner{% endblock %}
+{% block conteudo %}
+<h1>Executor</h1>
+<p class="lead">O Claude opera o computador de quem autorizou, para fazer uma tarefa que você descreve. Cada passo fica registrado e dá para cancelar a qualquer momento.</p>
+
+{% if not tem_chave %}
+<div class="card" style="border-color:var(--danger);margin-bottom:14px">O servidor ainda não tem a <span class="mono">ANTHROPIC_API_KEY</span>. Sem ela os comandos entram na fila, mas não executam.</div>
+{% endif %}
+
+<div class="grade g2" style="margin-top:6px">
+  <div>
+    <h2>Neste computador</h2>
+    <div class="card">
+      <p style="margin-top:0">Situação: <span class="tag {{ 'ok' if ativo else '' }}">{{ 'Liberado' if ativo else 'Desligado' }}</span></p>
+      <form method="post" action="{{ url_for('executor_ativar') }}" style="margin-bottom:14px">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="ativo" value="{{ '0' if ativo else '1' }}">
+        <button class="btn {{ 'sec' if ativo else '' }}">{{ 'Desligar o executor' if ativo else 'Liberar o executor' }}</button>
+      </form>
+      <ol style="margin:0;padding-left:20px;display:grid;gap:10px">
+        <li>No computador (Windows, macOS ou Linux), instale as dependências:
+          <pre class="cmd">pip install -r requirements-executor.txt</pre></li>
+        <li>Abra o executor com o seu código pessoal:
+          <pre class="cmd">python executor.py --servidor {{ servidor }} --token {{ eu.token_coleta or 'SEU_CODIGO' }}</pre></li>
+        <li>Deixe a janela aberta. Para parar tudo na hora, leve o mouse a um canto da tela ou aperte <strong>Ctrl+C</strong> no terminal.</li>
+      </ol>
+      <p class="lead" style="margin:12px 0 0;font-size:13px">Enquanto roda, o Claude vê capturas da sua tela. Por isso o executor se recusa a continuar se uma janela de senha, banco ou navegação anônima estiver aberta.</p>
+    </div>
+  </div>
+  <div>
+    <h2>Novo comando</h2>
+    <div class="card">
+      <form method="post" action="{{ url_for('executor_novo') }}" style="display:grid;gap:10px">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        {% if eu.papel == 'admin' %}
+        <label>Para quem
+          <select name="conta_id" style="width:100%">
+            {% for c in equipe %}<option value="{{ c.id }}" {{ 'selected' if c.id == eu.id }}>{{ c.nome }}{% if c.area %} — {{ c.area }}{% endif %}</option>{% endfor %}
+          </select>
+        </label>
+        <p class="lead" style="margin:0;font-size:13px">Comandos para outra pessoa só rodam depois que ela aprovar.</p>
+        {% endif %}
+        <label>O que o Claude deve fazer
+          <textarea name="instrucao" rows="4" maxlength="1000" required style="width:100%" placeholder="Ex.: Abra a planilha de conciliação na área de trabalho, filtre as linhas sem baixa e copie o total para o e-mail em rascunho."></textarea>
+        </label>
+        <button class="btn">Enviar comando</button>
+        <span class="lead" style="font-size:13px">Limite de {{ max_passos }} passos por comando.</span>
+      </form>
+    </div>
+  </div>
+</div>
+
+<h2>Comandos</h2>
+<div class="card tabela">
+  {% if comandos %}
+  <table>
+    <thead><tr><th>#</th><th>Colaborador</th><th>Tarefa</th><th>Situação</th><th>Passos</th><th></th></tr></thead>
+    <tbody>
+    {% for c in comandos %}
+      <tr>
+        <td>{{ c.id }}</td>
+        <td>{{ c.colaborador }}</td>
+        <td style="max-width:360px">{{ c.instrucao }}</td>
+        <td><span class="tag">{{ {'aguardando':'Aguardando aprovação','aprovado':'Na fila','executando':'Executando','concluido':'Concluído','falhou':'Parou','bloqueado':'Bloqueado por segurança','cancelado':'Cancelado','recusado':'Recusado'}[c.status] }}</span></td>
+        <td>{{ c.passos }}</td>
+        <td style="white-space:nowrap">
+          <a href="{{ url_for('executor_detalhe', cmd_id=c.id) }}">Detalhes</a>
+          {% if c.status == 'aguardando' and c.conta_id == eu.id %}
+            <form method="post" action="{{ url_for('executor_decidir', cmd_id=c.id) }}" style="display:inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="acao" value="aprovar"><button class="btn">Aprovar</button></form>
+            <form method="post" action="{{ url_for('executor_decidir', cmd_id=c.id) }}" style="display:inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="acao" value="recusar"><button class="btn sec">Recusar</button></form>
+          {% endif %}
+          {% if c.status in ('aguardando','aprovado','executando') %}
+            <form method="post" action="{{ url_for('executor_decidir', cmd_id=c.id) }}" style="display:inline"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="acao" value="cancelar"><button class="btn perigo">Cancelar</button></form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="lead" style="margin:0">Nenhum comando ainda.</p>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% import "_pop.html" as pp with context %}
+{% block titulo %}Manual — {{ c.nome }}{% endblock %}
+{% block conteudo %}
+{% set proprio = c.id == eu.id %}
+{% set f = r.descricao_funcao %}
+<p><a href="{{ url_for('colaborador', conta_id=c.id) }}">← {{ 'Meus processos' if proprio else c.nome }}</a></p>
+<div class="titulo-linha">
+  <div>
+    <h1>Manual de processos · {{ c.nome }}</h1>
+    <p class="lead">{{ c.funcao or 'Função não informada' }} · {{ c.area or 'Área não informada' }} · observado de {{ fmt_data(r.periodo.inicio) }} a {{ fmt_data(r.periodo.fim) }}</p>
+  </div>
+  <a class="btn" href="{{ url_for('exportar', conta_id=c.id) }}">Baixar manual (.md)</a>
+</div>
+
+<h2>Descrição da função</h2>
+<div class="card">
+  <div class="titulo-linha"><strong style="font-size:17px">{{ f.cargo_provavel }}</strong><span class="tag ia">escrito por {{ f.gerado_por }}</span></div>
+  <p style="margin:8px 0 0">{{ f.resumo }}</p>
+  <div class="grade g2" style="margin-top:12px">
+    {% if f.responsabilidades %}<div><strong>Responsabilidades</strong><ul class="limpa">{% for x in f.responsabilidades %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+    <div>
+      {% if f.sistemas_utilizados %}<strong>Sistemas utilizados</strong><p style="margin:6px 0 0">{{ f.sistemas_utilizados|join(', ') }}</p>{% endif %}
+      {% if f.competencias %}<strong style="display:block;margin-top:10px">Competências</strong><p style="margin:6px 0 0">{{ f.competencias|join(', ') }}</p>{% endif %}
+    </div>
+  </div>
+</div>
+
+<h2>Rotina da semana</h2>
+<div class="rotina-sem">
+  {% for dia, procs in semana %}
+  <div class="dia"><h4>{{ dia }}</h4>
+    {% for p in procs %}<div class="it"><span class="hora">{{ p.horario_tipico }}</span><a href="#pop-{{ p.id }}">{{ p.documento.nome }}</a>{% if p.ocorrencias / r.periodo.dias >= 2 %} <span class="lead">· ~{{ (p.ocorrencias / r.periodo.dias)|round|int }}×</span>{% endif %}</div>
+    {% else %}<p class="lead" style="font-size:13px;margin:0">Sem processos recorrentes.</p>{% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+<h2>Índice</h2>
+<div class="card">
+  <ol class="manual-indice">{% for p in r.processos %}<li><a href="#pop-{{ p.id }}">{{ p.documento.nome }}</a> <span class="lead">· {{ p.frequencia }}</span></li>{% endfor %}</ol>
+</div>
+
+<h2>Procedimentos</h2>
+<div class="grade">
+  {% for p in r.processos %}
+  <div class="card" id="pop-{{ p.id }}">{{ pp.pop(p, c, codigo='POP ' ~ c.id ~ '.' ~ loop.index, link=url_for('processo', conta_id=c.id, pid=p.id)) }}</div>
+  {% endfor %}
+</div>
+{% endblock %}

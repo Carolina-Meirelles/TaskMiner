@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Comando {{ cmd.id }} — TaskMiner{% endblock %}
+{% block conteudo %}
+<p><a href="{{ url_for('executor') }}">← Executor</a></p>
+<h1>Comando #{{ cmd.id }}</h1>
+<p class="lead">{{ dono.nome }} · criado em {{ fmt_data(cmd.criado_em) }} · situação: <span class="tag">{{ cmd.status }}</span> · {{ cmd.passos }} passo(s)</p>
+<div class="card"><strong>Tarefa</strong><p style="margin:6px 0 0">{{ cmd.instrucao }}</p></div>
+{% if cmd.resumo %}<h2>Resultado</h2><div class="card">{{ cmd.resumo }}</div>{% endif %}
+<h2>Ações executadas</h2>
+<div class="card tabela">
+{% if log %}
+  <table><thead><tr><th>Hora</th><th>Ação</th><th>Detalhe</th></tr></thead><tbody>
+  {% for l in log %}
+    <tr><td>{{ fmt_data(l.ts) }}</td><td>{{ l.acao.get('action', '—') }}</td>
+        <td class="mono">{% if l.acao.get('action') == 'type' %}{{ (l.acao.get('text') or '')|length }} caractere(s) digitados{% else %}{{ l.acao.get('coordinate') or l.acao.get('text') or '' }}{% endif %}</td></tr>
+  {% endfor %}
+  </tbody></table>
+{% else %}<p class="lead" style="margin:0">Nenhuma ação registrada.</p>{% endif %}
+</div>
+<p class="lead" style="font-size:13px">O texto digitado e as capturas de tela não ficam guardados aqui, só o tipo de cada ação.</p>
+{% endblock %}

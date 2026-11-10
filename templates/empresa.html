@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% import "_graficos.html" as gr with context %}
+{% block titulo %}{{ empresa.nome }} — TaskMiner{% endblock %}
+{% block conteudo %}
+<div class="titulo-linha">
+  <div>
+    <h1>{{ empresa.nome }}</h1>
+    <p class="lead">Processos mapeados de todos os colaboradores, por área.</p>
+  </div>
+  <div class="acoes">
+    <a class="btn sec" href="{{ url_for('colaboradores') }}">Cadastrar colaborador</a>
+    {% if resumo.documentados %}<a class="btn" href="{{ url_for('empresa_exportar') }}">Exportar manual da empresa (.md)</a>{% endif %}
+  </div>
+</div>
+
+<div class="grade g4" style="margin-top:18px">
+  <div class="card kpi"><div class="v">{{ resumo.colaboradores }}</div><div class="l">colaboradores ativos em {{ resumo.areas }} área(s)</div></div>
+  <div class="card kpi"><div class="v">{{ resumo.documentados }}</div><div class="l">com processos documentados</div></div>
+  <div class="card kpi"><div class="v">{{ resumo.processos }}</div><div class="l">processos, {{ resumo.gargalos_alta|default(0) }} gargalo(s) de severidade alta</div></div>
+  <div class="card kpi"><div class="v">{{ resumo.horas_semana|string|replace('.', ',') }} h</div><div class="l">por semana em tarefas repetitivas</div></div>
+</div>
+
+{% if total_gargalos %}
+<div class="titulo-linha" style="margin-top:32px"><h2 style="margin:0">Gargalos prioritários</h2><a href="{{ url_for('empresa_gargalos') }}" style="font-size:14px">Ver os {{ total_gargalos }} gargalos →</a></div>
+<div style="margin-top:12px">{{ gr.lista_gargalos(gargalos, mostrar_processo=True) }}</div>
+{% endif %}
+
+<h2>Colaboradores por área</h2>
+<div class="grade">
+{% for area, linhas in areas.items() %}
+  <div class="card">
+    <div class="titulo-linha"><h3>{{ area }}</h3><span class="lead">{{ linhas|length }} pessoa(s)</span></div>
+    <div class="tabela" style="margin-top:8px">
+      <table>
+        <thead><tr><th>Colaborador</th><th>Função</th><th>Situação</th><th class="num">Processos</th><th class="num">Tempo repetitivo</th><th></th></tr></thead>
+        <tbody>
+        {% for l in linhas %}{% set c = l.c %}
+          <tr>
+            <td><a href="{{ url_for('colaborador', conta_id=c.id) }}"><strong>{{ c.nome }}</strong></a>
+              {% if c.papel == 'admin' %} <span class="tag admin">admin</span>{% endif %}
+              {% if not c.ativo %} <span class="tag neutra">desativado</span>{% endif %}<br>
+              <span class="lead" style="font-size:13px">{{ c.email }}</span></td>
+            <td>{{ c.funcao or '—' }}</td>
+            <td><span class="tag {{ l.st.chave }}">{{ l.st.texto }}</span>
+              {% if l.st.ultimo %}<br><span class="lead" style="font-size:12px">último registro {{ fmt_data(l.st.ultimo) }}</span>{% endif %}</td>
+            <td class="num">{{ l.r.processos|length if l.r else '—' }}</td>
+            <td class="num">{{ (l.r.estatisticas.percentual_repetitivo|string|replace('.', ',') ~ '%') if l.r else '—' }}</td>
+            <td class="num"><a href="{{ url_for('colaborador_editar', conta_id=c.id) }}">Editar</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endfor %}
+</div>
+
+<div class="titulo-linha" style="margin-top:32px">
+  <h2 style="margin:0">Todos os processos documentados</h2>
+  {% if processos %}
+  <label for="filtro-area" style="font-weight:400;display:flex;align-items:center;gap:8px">Área
+    <select id="filtro-area" style="width:auto">
+      <option value="">Todas</option>
+      {% for area in areas if area != 'Sem área definida' %}<option>{{ area }}</option>{% endfor %}
+    </select>
+  </label>
+  {% endif %}
+</div>
+{% if processos %}
+<div class="card tabela" style="margin-top:12px">
+  <table id="tabela-processos">
+    <thead><tr><th>Processo</th><th>Responsável</th><th>Área</th><th>Frequência</th><th class="num">Por execução</th><th class="num">Total no período</th></tr></thead>
+    <tbody>
+    {% for x in processos %}
+      <tr data-area="{{ x.c.area or '' }}">
+        <td><a href="{{ url_for('processo', conta_id=x.c.id, pid=x.p.id) }}">{{ x.p.documento.nome }}</a>
+          <div class="fluxo" style="margin-top:4px">{% for a in x.p.aplicativos %}{% if not loop.first %}<span class="seta">→</span>{% endif %}<span class="app">{{ a }}</span>{% endfor %}</div></td>
+        <td>{{ x.c.nome }}</td>
+        <td>{{ x.c.area or '—' }}</td>
+        <td><span class="tag {{ x.p.tipo_frequencia }}">{{ x.p.frequencia }}</span></td>
+        <td class="num">{{ x.p.duracao_media }}</td>
+        <td class="num">{{ x.p.tempo_total }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<script>
+  document.getElementById("filtro-area").addEventListener("change", function () {
+    var a = this.value;
+    document.querySelectorAll("#tabela-processos tbody tr").forEach(function (tr) {
+      tr.hidden = !!a && tr.dataset.area !== a;
+    });
+  });
+</script>
+{% else %}
+<div class="card" style="margin-top:12px"><p class="lead">Nenhum processo documentado ainda. Cadastre os colaboradores, peça que instalem o agente (a página “Minha coleta” de cada um mostra como) e, depois da coleta, rode a análise na página do colaborador.</p></div>
+{% endif %}
+{% endblock %}

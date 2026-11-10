@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Minha coleta — TaskMiner{% endblock %}
+{% block conteudo %}
+<h1>Minha coleta</h1>
+<p class="lead">Como instalar o agente no seu computador e o que ele registra. Situação atual: <span class="tag {{ st.chave }}">{{ st.texto }}</span></p>
+
+<div class="grade g2" style="margin-top:6px">
+  <div>
+    <h2>Instalar no seu computador (Windows)</h2>
+    <div class="card">
+      <ol style="margin:0;padding-left:20px;display:grid;gap:12px">
+        <li>Instale o Python 3.10 ou mais novo em python.org, marcando “Add Python to PATH”.</li>
+        <li>Copie a pasta do TaskMiner para o seu computador e, dentro dela, rode:
+          <pre class="cmd">pip install -r requirements.txt</pre></li>
+        <li>Inicie a coleta com o seu código pessoal:
+          <pre class="cmd">python main.py coletar --servidor {{ servidor }} --token {{ c.token_coleta }}</pre>
+          <span class="lead" style="font-size:13px">O código fica salvo: das próximas vezes basta <span class="mono">python main.py coletar</span>.</span></li>
+        <li>Aceite o termo de consentimento. A coleta dura {{ config_dias }} dias e continua de onde parou se o computador for desligado.</li>
+      </ol>
+      <p class="lead" style="margin-top:14px">Não compartilhe o seu código: ele identifica você para o servidor. Se ele vazar, peça ao administrador um novo.</p>
+    </div>
+  </div>
+  <div>
+    <h2>O que é registrado</h2>
+    <div class="card">
+      <strong>Registrado</strong>
+      <ul class="limpa"><li>Aplicativo, janela e sistema em uso (nos sites, só o domínio, ex.: crm.empresa.com.br)</li><li>Nome dos botões e campos clicados</li><li>Atalhos de teclado, Enter e Tab</li><li>Quantidade de caracteres digitados</li><li>Períodos sem uso do computador</li></ul>
+      <strong style="display:block;margin-top:12px">Nunca registrado</strong>
+      <ul class="limpa"><li>O texto que você digita e as senhas</li><li>O endereço completo das páginas</li><li>Capturas de tela</li><li>Navegação anônima e gerenciadores de senha</li><li>E-mails, CPFs e telefones em títulos (são mascarados)</li></ul>
+      <p style="margin-bottom:0"><strong>Ctrl+Alt+P</strong> pausa e retoma a coleta a qualquer momento.</p>
+    </div>
+    <h2>Seus dados até agora</h2>
+    <div class="card">
+      {% if st.eventos %}
+      <p style="margin:0">{{ st.eventos }} eventos em {{ st.dias }} dia(s). Primeiro registro {{ fmt_data(st.inicio) }}, último {{ fmt_data(st.ultimo) }}.</p>
+      {% else %}<p class="lead" style="margin:0">Nenhum dado recebido ainda.</p>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

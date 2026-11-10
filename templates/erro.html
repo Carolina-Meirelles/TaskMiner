@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} — TaskMiner{% endblock %}
+{% block conteudo %}
+<div class="acesso">
+  <h1>{{ titulo }}</h1>
+  <p class="lead">{{ msg }}</p>
+  <p style="margin-top:16px"><a class="btn sec" href="{{ url_for('inicio') }}">Voltar ao início</a></p>
+</div>
+{% endblock %}

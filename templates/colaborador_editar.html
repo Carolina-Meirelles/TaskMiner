@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block titulo %}{{ c.nome }} — Editar — TaskMiner{% endblock %}
+{% block conteudo %}
+<p><a href="{{ url_for('colaboradores') }}">← Colaboradores</a></p>
+<div class="titulo-linha">
+  <div>
+    <h1>{{ c.nome }}</h1>
+    <p class="lead">{{ c.funcao or 'Função não informada' }} · {{ c.area or 'Área não informada' }} · <span class="tag {{ st.chave }}">{{ st.texto }}</span></p>
+  </div>
+  <a class="btn sec" href="{{ url_for('colaborador', conta_id=c.id) }}">Ver processos</a>
+</div>
+<datalist id="lista-areas">{% for a in areas %}<option value="{{ a }}">{% endfor %}</datalist>
+
+<div class="grade g2" style="margin-top:6px">
+  <div>
+    <h2>Cadastro</h2>
+    <div class="card">
+      <form class="campos" method="post">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <input type="hidden" name="acao" value="salvar">
+        <div class="linha-campos">
+          <label for="nome">Nome <input id="nome" name="nome" value="{{ c.nome }}" required></label>
+          <label for="email">E-mail (login) <input id="email" name="email" type="email" value="{{ c.email }}" required></label>
+        </div>
+        <div class="linha-campos">
+          <label for="funcao">Função <input id="funcao" name="funcao" value="{{ c.funcao or '' }}"></label>
+          <label for="area">Área <input id="area" name="area" list="lista-areas" value="{{ c.area or '' }}"></label>
+        </div>
+        <div class="linha-campos">
+          <label for="papel">Acesso
+            <select id="papel" name="papel" {{ 'disabled' if c.id == eu.id }}>
+              <option value="colaborador">Colaborador</option>
+              <option value="admin" {{ 'selected' if c.papel == 'admin' }}>Administrador</option>
+            </select>
+          </label>
+          <label for="senha">Nova senha <span class="dica">deixe vazio para manter</span><input id="senha" name="senha" type="text" autocomplete="off"></label>
+        </div>
+        <label for="usuario_coleta">Identificador de coleta <span class="dica">chave dos dados coletados; altere só se souber o que faz</span>
+          <input id="usuario_coleta" name="usuario_coleta" value="{{ c.usuario_coleta }}" class="mono"></label>
+        <div><button class="btn" type="submit">Salvar alterações</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2>Coleta</h2>
+    <div class="card">
+      <p style="margin-top:0">{{ st.eventos }} eventos recebidos{% if st.dias %} em {{ st.dias }} dia(s), de {{ fmt_data(st.inicio) }} a {{ fmt_data(st.ultimo) }}{% endif %}.</p>
+      <p class="lead">Comando para o computador de {{ c.nome.split()[0] }}:</p>
+      <pre class="cmd">python main.py coletar --servidor {{ servidor }} --token {{ c.token_coleta }}</pre>
+      <div class="acoes" style="margin-top:14px">
+        {% if st.eventos %}
+        <form method="post" action="{{ url_for('colaborador_analisar', conta_id=c.id) }}">
+          <input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn" type="submit">Rodar análise agora</button>
+        </form>
+        {% endif %}
+        <form method="post"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="acao" value="novo_token">
+          <button class="btn sec" type="submit">Gerar novo código</button></form>
+      </div>
+    </div>
+
+    {% if c.id != eu.id %}
+    <h2>Acesso</h2>
+    <div class="card">
+      <p class="lead" style="margin-top:0">{{ 'Desativar impede o login e bloqueia o envio de dados pelo agente. Os processos já documentados continuam guardados.' if c.ativo else 'Esta conta está desativada.' }}</p>
+      <form method="post" style="margin-top:12px"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="acao" value="alternar_ativo">
+        <button class="btn {{ 'perigo' if c.ativo else '' }}" type="submit">{{ 'Desativar conta' if c.ativo else 'Reativar conta' }}</button></form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

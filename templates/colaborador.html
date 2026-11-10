@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% import "_pop.html" as pp with context %}
+{% import "_novos.html" as nv with context %}
+{% block titulo %}{{ c.nome }} — TaskMiner{% endblock %}
+{% block conteudo %}
+{% set proprio = c.id == eu.id %}
+{% if eu.papel == 'admin' and not proprio %}<p><a href="{{ url_for('empresa_processos') }}">← Processos da empresa</a></p>{% endif %}
+<div class="titulo-linha">
+  <div>
+    <h1>{{ 'Minhas atividades' if proprio else 'Atividades de ' ~ c.nome }}</h1>
+    <p class="lead">{{ c.nome if proprio else '' }}{{ ' · ' if proprio }}{{ c.funcao or 'Função não informada' }} · {{ c.area or 'Área não informada' }}{% if r %} · observado de {{ fmt_data(r.periodo.inicio) }} a {{ fmt_data(r.periodo.fim) }}{% endif %}</p>
+  </div>
+  <div class="acoes">
+    {% if eu.papel == 'admin' and st.eventos %}
+    <form method="post" action="{{ url_for('colaborador_analisar', conta_id=c.id) }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn sec" type="submit">{{ 'Atualizar análise' if r else 'Rodar análise' }}</button>
+    </form>
+    {% endif %}
+    {% if r %}<a class="btn" href="{{ url_for('exportar', conta_id=c.id) }}">Baixar manual (.md)</a>{% endif %}
+  </div>
+</div>
+
+{% if not r %}
+<div class="card" style="margin-top:18px">
+  <p style="margin:0 0 8px"><span class="tag {{ st.chave }}">{{ st.texto }}</span></p>
+  {% if st.eventos %}
+    <p style="margin:0">A coleta já registrou {{ st.eventos }} eventos em {{ st.dias }} dia(s).
+    {% if eu.papel == 'admin' %}Rode a análise quando a coleta terminar (o ideal são 10 dias úteis).
+    {% else %}Quando a coleta terminar, o administrador gera a documentação das suas atividades.{% endif %}</p>
+  {% else %}
+    <p style="margin:0">Ainda não há dados de coleta{{ '' if proprio else ' para ' ~ c.nome.split()[0] }}.
+    {% if proprio %}Veja em <a href="{{ url_for('minha_coleta') }}">Minha coleta</a> como instalar o agente no seu computador.
+    {% else %}O comando de instalação está na página de <a href="{{ url_for('colaborador_editar', conta_id=c.id) }}">edição do colaborador</a>.{% endif %}</p>
+  {% endif %}
+</div>
+{% else %}
+{% set f = r.descricao_funcao %}
+
+{% if novos %}
+<h2>{{ 'Atividade nova identificada' if novos|length == 1 else 'Atividades novas identificadas' }}</h2>
+<div class="grade">{% for item in novos %}{{ nv.novo_processo(item, eu.papel == 'admin', mostrar_resp=False) }}{% endfor %}</div>
+{% endif %}
+
+<h2>Rotina da semana</h2>
+<div class="rotina-sem">
+  {% for dia, procs in semana %}
+  <div class="dia"><h4>{{ dia }}</h4>
+    {% for p in procs %}<div class="it"><span class="hora">{{ p.horario_tipico }}</span><a href="#ativ-{{ p.id }}">{{ p.documento.nome }}</a>{% if p.ocorrencias / r.periodo.dias >= 2 %} <span class="lead">· ~{{ (p.ocorrencias / r.periodo.dias)|round|int }}× ao dia</span>{% endif %}</div>
+    {% else %}<p class="lead" style="font-size:13px;margin:0">Sem atividades recorrentes.</p>{% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+<h2>Passo a passo de cada atividade</h2>
+<div class="grade">
+  {% for p in r.processos %}
+  <div id="ativ-{{ p.id }}">{{ pp.atividade(p, c, url_for('processo', conta_id=c.id, pid=p.id)) }}</div>
+  {% endfor %}
+</div>
+
+<h2>Descrição da função</h2>
+<div class="card">
+  <div class="titulo-linha"><strong style="font-size:17px">{{ f.cargo_provavel }}</strong><span class="tag ia">escrito por {{ f.gerado_por }}</span></div>
+  <p style="margin:8px 0 0">{{ f.resumo }}</p>
+  <div class="grade g2" style="margin-top:12px">
+    {% if f.responsabilidades %}<div><strong>Responsabilidades</strong><ul class="limpa">{% for x in f.responsabilidades %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+    <div>
+      {% if f.sistemas_utilizados %}<strong>Sistemas utilizados</strong><p style="margin:6px 0 0">{{ f.sistemas_utilizados|join(', ') }}</p>{% endif %}
+      {% if f.competencias %}<strong style="display:block;margin-top:10px">Competências</strong><p style="margin:6px 0 0">{{ f.competencias|join(', ') }}</p>{% endif %}
+    </div>
+  </div>
+</div>
+
+{% set e = r.estatisticas %}
+{% set ng = r.processos|map(attribute='gargalos')|map('length')|sum %}
+<h2>Indicadores</h2>
+<div class="card">
+  <div class="mini-kpis" style="margin:0">
+    <span><b>{{ r.processos|length }}</b> atividades recorrentes</span>
+    <span><b>{{ e.media_diaria }}</b> de tempo ativo por dia</span>
+    <span><b>{{ e.percentual_repetitivo|string|replace('.', ',') }}%</b> do tempo em tarefas repetitivas</span>
+    <span><b>{{ ng }}</b> gargalo(s) identificado(s)</span>
+  </div>
+  <div class="acoes" style="margin-top:12px">
+    <a class="btn sec" href="{{ url_for('colaborador_graficos', conta_id=c.id) }}">Ver gráficos</a>
+    <a class="btn sec" href="{{ url_for('colaborador_melhorias', conta_id=c.id) }}">Ver melhorias e gargalos</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

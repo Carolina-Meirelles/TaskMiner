@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Entrar — TaskMiner{% endblock %}
+{% block conteudo %}
+<div class="acesso">
+  <h1>Entrar</h1>
+  <p class="lead">Use o e-mail e a senha que o administrador da sua empresa cadastrou.</p>
+  <div class="card" style="margin-top:18px">
+    <form class="campos" method="post">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="email">E-mail <input id="email" name="email" type="email" value="{{ email }}" autocomplete="username" required autofocus></label>
+      <label for="senha">Senha <input id="senha" name="senha" type="password" autocomplete="current-password" required></label>
+      <button class="btn" type="submit">Entrar</button>
+    </form>
+  </div>
+  <p class="lead" style="margin-top:16px">Sua empresa ainda não usa o TaskMiner? <a href="{{ url_for('cadastro') }}">Cadastre a empresa</a></p>
+</div>
+{% endblock %}

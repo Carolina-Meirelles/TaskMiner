@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block titulo %}Colaboradores — TaskMiner{% endblock %}
+{% block conteudo %}
+<h1>Colaboradores</h1>
+<p class="lead">Cadastre quem vai participar do mapeamento, com a função e a área de cada um.</p>
+
+<datalist id="lista-areas">{% for a in areas %}<option value="{{ a }}">{% endfor %}</datalist>
+
+<div class="grade g2" style="margin-top:6px">
+  <div>
+    <h2>Equipe cadastrada ({{ contas|length }})</h2>
+    <div class="card tabela">
+      <table>
+        <thead><tr><th>Nome</th><th>Função</th><th>Área</th><th>Acesso</th><th></th></tr></thead>
+        <tbody>
+        {% for c in contas %}
+          <tr>
+            <td><strong>{{ c.nome }}</strong><br><span class="lead" style="font-size:13px">{{ c.email }}</span></td>
+            <td>{{ c.funcao or '—' }}</td>
+            <td>{{ c.area or '—' }}</td>
+            <td>{% if not c.ativo %}<span class="tag neutra">desativado</span>{% elif c.papel == 'admin' %}<span class="tag admin">admin</span>{% else %}<span class="tag neutra">colaborador</span>{% endif %}</td>
+            <td class="num"><a href="{{ url_for('colaborador_editar', conta_id=c.id) }}">Editar</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Dados da empresa</h2>
+    <div class="card">
+      <form class="campos" method="post" action="{{ url_for('empresa_dados') }}">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <div class="linha-campos">
+          <label for="emp-nome">Nome da empresa <input id="emp-nome" name="nome" value="{{ empresa.nome }}" required></label>
+          <label for="emp-cnpj">CNPJ <input id="emp-cnpj" name="cnpj" value="{{ empresa.cnpj or '' }}"></label>
+        </div>
+        <div><button class="btn sec" type="submit">Salvar dados da empresa</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2>Novo colaborador</h2>
+    <div class="card">
+      <form class="campos" method="post" action="{{ url_for('colaborador_novo') }}">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label for="nome">Nome completo <input id="nome" name="nome" value="{{ f.nome }}" required></label>
+        <label for="email">E-mail <span class="dica">é o login dele(a)</span><input id="email" name="email" type="email" value="{{ f.email }}" required></label>
+        <label for="funcao">Função <input id="funcao" name="funcao" value="{{ f.funcao }}" placeholder="Ex.: Analista de Contas a Pagar"></label>
+        <label for="area">Área <input id="area" name="area" list="lista-areas" value="{{ f.area }}" placeholder="Ex.: Financeiro"></label>
+        <label for="senha">Senha inicial <span class="dica">mínimo de 8 caracteres; a pessoa pode trocar depois</span><input id="senha" name="senha" type="text" autocomplete="off" required></label>
+        <label for="papel">Acesso
+          <select id="papel" name="papel">
+            <option value="colaborador">Colaborador: vê só os próprios processos</option>
+            <option value="admin" {{ 'selected' if f.papel == 'admin' }}>Administrador: vê toda a empresa</option>
+          </select>
+        </label>
+        <details>
+          <summary class="lead" style="cursor:pointer;font-size:13px">Opções avançadas</summary>
+          <label for="usuario_coleta" style="margin-top:10px">Identificador de coleta <span class="dica">deixe vazio para usar o e-mail; preencha com o usuário do Windows só se a coleta for feita sem servidor</span>
+            <input id="usuario_coleta" name="usuario_coleta" value="{{ f.usuario_coleta }}"></label>
+        </details>
+        <div><button class="btn" type="submit">Cadastrar colaborador</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

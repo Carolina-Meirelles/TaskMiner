@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% import "_graficos.html" as gr with context %}
+{% block titulo %}Melhorias e gargalos — TaskMiner{% endblock %}
+{% block conteudo %}
+{% set proprio = c and c.id == eu.id %}
+{% if c and not proprio %}<p><a href="{{ url_for('colaborador', conta_id=c.id) }}">← Atividades de {{ c.nome }}</a></p>{% endif %}
+<h1>{{ 'Minhas melhorias e gargalos' if proprio else ('Melhorias e gargalos · ' ~ c.nome if c else 'Melhorias e gargalos') }}</h1>
+<p class="lead">Sugestões geradas a partir do que foi observado na coleta e os pontos em que os processos perdem tempo. As mais prioritárias aparecem primeiro.</p>
+
+<div class="grade g4" style="margin-top:18px">
+  <div class="card kpi"><div class="v">{{ resumo.abertas }}</div><div class="l">sugestões em aberto</div></div>
+  <div class="card kpi"><div class="v" style="color:var(--danger)">{{ resumo.alto }}</div><div class="l">de alto impacto (1 h+ por semana)</div></div>
+  <div class="card kpi"><div class="v" style="color:var(--accent)">{{ resumo.rapido }}</div><div class="l">ganhos rápidos (esforço baixo)</div></div>
+  <div class="card kpi"><div class="v">{{ resumo.gargalos }}</div><div class="l">gargalos, {{ resumo.gargalos_alta }} de severidade alta</div></div>
+</div>
+
+<div class="abas" role="tablist">
+  <button role="tab" id="aba-sugestoes" aria-selected="true" aria-controls="painel-sugestoes">Sugestões de melhoria<span class="cont">{{ lista|length }}</span></button>
+  <button role="tab" id="aba-gargalos" aria-selected="false" aria-controls="painel-gargalos">Gargalos<span class="cont">{{ gargalos|length }}</span></button>
+</div>
+
+<section id="painel-sugestoes" role="tabpanel" aria-labelledby="aba-sugestoes">
+  <div class="grade g2" style="margin-top:6px">
+    <div>
+      <h2>Por onde começar</h2>
+      <div class="card">
+        <div class="matriz">
+          <span></span><span class="cab">Esforço baixo</span><span class="cab">Esforço médio</span><span class="cab">Esforço alto</span>
+          <span class="eixo">Impacto alto<br>(1 h+/sem)</span>
+          {% for e in ['baixo', 'medio', 'alto'] %}<div class="cel-m {{ 'melhor' if e == 'baixo' else ('bom' if e == 'medio') }}"><b>{{ matriz.get(('alto', e), 0) }}</b>{{ 'faça já' if e == 'baixo' else ('planeje' if e == 'medio' else 'projeto') }}</div>{% endfor %}
+          <span class="eixo">Impacto menor</span>
+          {% for e in ['baixo', 'medio', 'alto'] %}<div class="cel-m {{ 'bom' if e == 'baixo' }}"><b>{{ matriz.get(('baixo', e), 0) }}</b>{{ 'ganho rápido' if e == 'baixo' else ('avaliar' if e == 'medio' else 'baixa prioridade') }}</div>{% endfor %}
+        </div>
+        <p class="lead" style="margin:12px 0 0;font-size:13px">Sugestões em aberto, pelo tempo envolvido hoje e pelo esforço estimado para resolver.</p>
+      </div>
+    </div>
+    <div>
+      <h2>Como as sugestões são geradas</h2>
+      <div class="card">
+        <ul class="limpa" style="margin:0">
+          <li><strong>Padrões de desperdício</strong> vistos na coleta: copiar e colar entre sistemas, exportar e importar à mão, mover arquivos, escrever o mesmo e-mail, digitar os mesmos dados em dois sistemas.</li>
+          <li><strong>Gargalos</strong>: etapas lentas, instáveis, interrompidas ou com muita digitação.</li>
+          <li><strong>Recomendações</strong> escritas na documentação de cada processo.</li>
+        </ul>
+        <p class="lead" style="margin:10px 0 0;font-size:13px">O impacto é o tempo gasto hoje nas etapas envolvidas, não uma promessa de economia.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="filtros">
+    {% if areas %}<label for="f-area">Área <select id="f-area"><option value="">Todas</option>{% for a in areas %}<option>{{ a }}</option>{% endfor %}</select></label>{% endif %}
+    <label for="f-pri">Prioridade <select id="f-pri"><option value="">Todas</option><option value="alto">Alto impacto</option><option value="rapido">Ganho rápido</option><option value="avaliar">Avaliar</option></select></label>
+    <label for="f-ori">Origem <select id="f-ori"><option value="">Todas</option><option value="padrao">Padrão de desperdício</option><option value="gargalo">Gargalo</option><option value="documentacao">Recomendação</option></select></label>
+    <label for="f-st">Situação <select id="f-st"><option value="abertas">Em aberto</option><option value="">Todas</option>{% for k, v in status_opcoes %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+  </div>
+
+  <div class="grade" id="lista-sug" style="margin-top:14px">
+  {% for i in lista %}
+    <article class="sug {{ 'feita' if i.status in ('concluida', 'descartada') }}" id="s-{{ i.chave }}" data-area="{{ i.area }}" data-pri="{{ i.prioridade }}" data-ori="{{ i.origem }}" data-st="{{ i.status }}">
+      <div class="sug-topo">
+        <span class="tag pri-{{ i.prioridade }}">{{ i.prioridade_txt }}</span>
+        <strong>{{ i.titulo }}</strong>
+        {% if i.horas_semana %}<span class="impacto">{{ i.horas_semana|string|replace('.', ',') }} h<small>por semana nas etapas envolvidas</small></span>{% endif %}
+      </div>
+      <p class="lead" style="font-size:13px">{% if i.link %}<a href="{{ i.link }}">{{ i.processo }}</a>{% else %}{{ i.processo }}{% endif %}{% if not c %} · {{ i.responsavel }} · {{ i.area }}{% endif %}{% if i.etapas %} · etapa{{ 's' if i.etapas|length > 1 }} {{ i.etapas|join(', ') }}{% endif %}</p>
+      {% if i.detalhe != i.sugestao %}<p>{{ i.detalhe }}</p>{% endif %}
+      <p class="o-que"><b>Sugestão:</b> {{ i.sugestao }}</p>
+      <div class="sug-rodape">
+        <span>{{ i.esforco_txt }}</span>
+        <span>· {{ {'padrao': 'Padrão observado na coleta', 'gargalo': 'Gargalo', 'documentacao': 'Recomendação da documentação'}[i.origem] }}</span>
+        {% if editavel %}
+        <form method="post" action="{{ url_for('melhoria_status') }}">
+          <input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="chave" value="{{ i.chave }}"><input type="hidden" name="volta" value="{{ request.path }}">
+          <label for="st-{{ i.chave }}" style="font-weight:400;display:flex;gap:6px;align-items:center">Situação
+            <select id="st-{{ i.chave }}" name="status" onchange="this.form.submit()">{% for k, v in status_opcoes %}<option value="{{ k }}" {{ 'selected' if k == i.status }}>{{ v }}</option>{% endfor %}</select></label>
+          <noscript><button class="btn sec" type="submit">Salvar</button></noscript>
+        </form>
+        {% else %}
+        <span class="tag st-{{ i.status }}" style="margin-left:auto">{{ dict(status_opcoes)[i.status] }}</span>
+        {% endif %}
+      </div>
+    </article>
+  {% else %}
+    <div class="card"><p class="lead" style="margin:0">Nenhuma sugestão ainda. Elas aparecem depois que os processos forem documentados.</p></div>
+  {% endfor %}
+  </div>
+  <p class="lead" id="sem-sug" hidden style="margin-top:14px">Nenhuma sugestão com esses filtros.</p>
+</section>
+
+<section id="painel-gargalos" role="tabpanel" aria-labelledby="aba-gargalos" hidden>
+  <h2>Gargalos identificados</h2>
+  {% for g in gargalos %}<div style="margin-bottom:10px">{{ gr.lista_gargalos([g], mostrar_processo=True) }}</div>
+  {% else %}<div class="card"><p class="lead" style="margin:0">Nenhum gargalo identificado.</p></div>{% endfor %}
+  <h2>Como os gargalos são identificados</h2>
+  <div class="card">
+    <ul class="limpa" style="margin:0">
+      <li><strong>Etapa concentra o tempo:</strong> uma etapa ocupa 35% ou mais do tempo do processo.</li>
+      <li><strong>Tempo instável:</strong> 1 em cada 10 execuções da etapa leva 2 vezes ou mais o tempo normal (mediana).</li>
+      <li><strong>Interrupções frequentes:</strong> o colaborador sai do processo no meio em 10% ou mais das vezes.</li>
+      <li><strong>Digitação manual repetitiva:</strong> 3 ou mais campos preenchidos à mão na mesma etapa, em toda execução.</li>
+    </ul>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var abas = { sugestoes: document.getElementById("aba-sugestoes"), gargalos: document.getElementById("aba-gargalos") };
+    function mostrar(nome) {
+      Object.keys(abas).forEach(function (k) {
+        abas[k].setAttribute("aria-selected", k === nome ? "true" : "false");
+        document.getElementById("painel-" + k).hidden = k !== nome;
+      });
+    }
+    abas.sugestoes.onclick = function () { mostrar("sugestoes"); history.replaceState(null, "", "#sugestoes"); };
+    abas.gargalos.onclick = function () { mostrar("gargalos"); history.replaceState(null, "", "#gargalos"); };
+    if (location.hash === "#gargalos") mostrar("gargalos");
+
+    var f = ["f-area", "f-pri", "f-ori", "f-st"].map(function (id) { return document.getElementById(id); });
+    function filtrar() {
+      var n = 0;
+      document.querySelectorAll("#lista-sug .sug").forEach(function (el) {
+        var a = f[0] ? f[0].value : "", p = f[1].value, o = f[2].value, s = f[3].value;
+        var ok = (!a || el.dataset.area === a) && (!p || el.dataset.pri === p) && (!o || el.dataset.ori === o)
+          && (s === "" || (s === "abertas" ? ["concluida", "descartada"].indexOf(el.dataset.st) < 0 : el.dataset.st === s));
+        el.hidden = !ok; if (ok) n++;
+      });
+      var vazio = document.getElementById("sem-sug"); if (vazio) vazio.hidden = n > 0 || !document.querySelector("#lista-sug .sug");
+    }
+    f.forEach(function (x) { if (x) x.onchange = filtrar; });
+    filtrar();
+    if (location.hash.indexOf("#s-") === 0) {
+      var alvo = document.getElementById(location.hash.slice(1));
+      if (alvo) { alvo.hidden = false; alvo.scrollIntoView({ block: "center" }); alvo.style.outline = "2px solid var(--accent)"; }
+    }
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{# Procedimento Operacional Padrão (POP) de um processo — usado na página do processo e no manual #}
+{% macro pop(p, c, codigo=None, link=None) %}
+{% set d = p.documento %}
+<article class="pop">
+  <div class="pop-cab">
+    <div>
+      <span class="pop-cod">{{ codigo or 'POP' }}</span>
+      <h3 class="pop-nome">{% if link %}<a href="{{ link }}">{{ d.nome }}</a>{% else %}{{ d.nome }}{% endif %}</h3>
+      <p class="lead">{{ d.objetivo }}</p>
+    </div>
+    <span class="tag ia">escrito por {{ d.gerado_por }}</span>
+  </div>
+
+  <dl class="pop-ficha">
+    <div><dt>Responsável</dt><dd>{{ c.nome }} · {{ c.funcao or d.responsavel or '—' }}</dd></div>
+    <div><dt>Área</dt><dd>{{ c.area or '—' }}</dd></div>
+    <div><dt>Frequência</dt><dd>{{ p.frequencia }}</dd></div>
+    <div><dt>Horário típico</dt><dd>{{ p.horario_tipico }} <span class="lead">({{ p.janela_horario }})</span></dd></div>
+    <div><dt>Duração</dt><dd>{{ p.duracao_media }} por execução</dd></div>
+    <div><dt>Sistemas</dt><dd>{{ p.aplicativos|unique|join(', ') }}</dd></div>
+    <div class="largo"><dt>Quando fazer</dt><dd>{{ d.gatilho }}</dd></div>
+  </dl>
+
+  {% if d.entradas or d.saidas %}
+  <div class="pop-es">
+    {% if d.entradas %}<div><h4>Entradas</h4><ul class="limpa">{% for x in d.entradas %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if d.saidas %}<div><h4>Resultado</h4><ul class="limpa">{% for x in d.saidas %}<li>{{ x }}</li>{% endfor %}</ul></div>{% endif %}
+  </div>
+  {% endif %}
+
+  <h4 class="pop-sec">Passo a passo</h4>
+  {% set etapas_g = p.gargalos|map(attribute='etapa')|list if p.gargalos else [] %}
+  <ol class="pop-passos">
+    {% for s in d.passos %}{% set n = loop.index %}
+    <li class="{{ 'com-gargalo' if (loop.index0 in etapas_g and d.passos|length == p.passos|length) }}">
+      <div class="pp-topo">
+        <span class="pp-num">{{ n }}</span>
+        <strong>{{ s.titulo }}</strong>
+        {% if s.sistema %}<span class="tag neutra">{{ s.sistema }}</span>{% endif %}
+        {% if s.tempo %}<span class="pp-tempo">{{ s.tempo }}</span>{% endif %}
+      </div>
+      {% if s.descricao %}<p>{{ s.descricao }}</p>{% endif %}
+      {% if s.subpassos %}
+      <ol class="pp-sub">{% for x in s.subpassos %}<li><span class="pp-subnum">{{ n }}.{{ loop.index }}</span>{{ x }}</li>{% endfor %}</ol>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+
+  {% if d.pontos_de_atencao %}
+  <h4 class="pop-sec">Pontos de atenção</h4>
+  <ul class="limpa">{% for x in d.pontos_de_atencao %}<li>{{ x }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if d.oportunidades_de_automacao %}
+  <h4 class="pop-sec">Oportunidades de melhoria</h4>
+  <ul class="limpa">{% for x in d.oportunidades_de_automacao %}<li>{{ x }}</li>{% endfor %}</ul>
+  {% endif %}
+</article>
+{% endmacro %}
+
+
+{# Cartão de atividade com o passo a passo resumido — tela principal #}
+{% macro atividade(p, c, link, mostrar_resp=False) %}
+{% set d = p.documento %}
+<article class="card ativ" data-area="{{ c.area or '' }}" data-colab="{{ c.id }}" data-busca="{{ (d.nome ~ ' ' ~ c.nome ~ ' ' ~ (p.aplicativos|join(' ')))|lower }}">
+  <div class="ativ-cab">
+    <div>
+      <h3><a href="{{ link }}">{{ d.nome }}</a></h3>
+      <p class="lead">{{ d.objetivo }}</p>
+    </div>
+    <a class="btn sec ativ-btn" href="{{ link }}">Procedimento completo</a>
+  </div>
+  <div class="ativ-meta">
+    {% if mostrar_resp %}<span><b>{{ c.nome }}</b> · {{ c.funcao or '' }}</span>{% endif %}
+    <span class="tag {{ p.tipo_frequencia }}">{{ p.frequencia }}</span>
+    {% if p.fixado_pelo_gestor %}<span class="tag fixado" title="Identificado como processo novo e aprovado{{ ' por ' ~ p.fixado_por if p.fixado_por }}">processo novo, fixado pelo gestor{{ ' em ' ~ fmt_data(p.fixado_em)[:10] if p.fixado_em }}</span>{% endif %}
+    <span>por volta de {{ p.horario_tipico }}</span>
+    <span>{{ p.duracao_media }} por execução</span>
+    <span>{{ p.aplicativos|unique|join(' · ') }}</span>
+  </div>
+  <ol class="ativ-passos">
+    {% for s in d.passos %}{% set n = loop.index %}
+    <li>
+      <div class="ap-topo"><span class="pp-num">{{ n }}</span><div><strong>{{ s.titulo }}</strong>
+        <span class="ap-info">{{ s.sistema or '' }}{{ ' · ' if s.sistema and s.tempo }}{{ s.tempo or '' }}</span></div></div>
+      {% if s.subpassos %}<ol class="pp-sub">{% for x in s.subpassos %}<li><span class="pp-subnum">{{ n }}.{{ loop.index }}</span>{{ x }}</li>{% endfor %}</ol>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</article>
+{% endmacro %}

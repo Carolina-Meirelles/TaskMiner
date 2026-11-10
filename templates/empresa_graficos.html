@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% import "_graficos.html" as gr with context %}
+{% block titulo %}Gráficos — {{ empresa.nome }}{% endblock %}
+{% block conteudo %}
+<h1>Gráficos da empresa</h1>
+<p class="lead">Onde está o tempo gasto em tarefas repetitivas e quais áreas concentram os gargalos. Passe o mouse sobre as barras para ver os valores.</p>
+
+{% if not itens %}
+<div class="card" style="margin-top:18px"><p class="lead" style="margin:0">Os gráficos aparecem quando houver ao menos um colaborador com processos documentados.</p></div>
+{% else %}
+<div class="grade g2">
+  <div>
+    <h2>Horas por semana em tarefas repetitivas, por área</h2>
+    <div class="card">{{ gr.barras_h(areas) }}</div>
+  </div>
+  <div>
+    <h2>Gargalos por área</h2>
+    <div class="card">
+      <div class="legenda"><span><i class="sw" style="background:var(--danger)"></i>alta</span><span><i class="sw" style="background:var(--warn)"></i>média</span></div>
+      {% set mxg = gargalos_area.values()|map(attribute='alta')|list %}
+      {% set tots = [] %}{% for a, v in gargalos_area.items() %}{% set _ = tots.append(v.alta + v.media) %}{% endfor %}
+      {% set mx = tots|max or 1 %}
+      <div class="gbarras">
+      {% for a, v in gargalos_area|dictsort %}
+        <div class="gbarra" title="{{ a }}: {{ v.alta }} de severidade alta, {{ v.media }} média">
+          <span class="rot"><span class="nome">{{ a }}</span></span>
+          <span class="trilho" style="display:flex;gap:2px">
+            {% if v.alta %}<span class="enc" style="width:{{ (100 * v.alta / mx)|round(1) }}%;background:var(--danger);border-radius:0"></span>{% endif %}
+            {% if v.media %}<span class="enc" style="width:{{ (100 * v.media / mx)|round(1) }}%;background:var(--warn)"></span>{% endif %}
+          </span>
+          <span class="val">{{ v.alta + v.media }}</span>
+        </div>
+      {% endfor %}
+      </div>
+      <p class="lead" style="margin-top:12px;font-size:13px"><a href="{{ url_for('empresa_gargalos') }}">Ver todos os gargalos →</a></p>
+    </div>
+  </div>
+</div>
+
+<h2>Processos que mais consomem tempo (horas por semana)</h2>
+<div class="card">
+  <div class="legenda"><span><i class="sw s1"></i>processo</span><span><i class="sw" style="background:var(--danger)"></i>com gargalo de severidade alta</span></div>
+  {{ gr.barras_h(processos) }}
+</div>
+
+<h2>Onde o tempo vai em cada processo</h2>
+<div class="grade">
+  {% for c, r in itens %}{% for p in r.processos %}
+  <div class="card">
+    <div class="titulo-linha" style="margin-bottom:10px"><a href="{{ url_for('processo', conta_id=c.id, pid=p.id) }}"><strong>{{ p.documento.nome }}</strong></a><span class="lead">{{ c.nome }} · {{ p.duracao_media }} por execução</span></div>
+    {{ gr.composicao(p) }}
+  </div>
+  {% endfor %}{% endfor %}
+  <p class="lead" style="font-size:13px">Cada barra é uma execução média dividida por etapa. Em vermelho, as etapas com gargalo.</p>
+</div>
+{% endif %}
+{% endblock %}

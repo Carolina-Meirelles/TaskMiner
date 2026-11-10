@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% import "_graficos.html" as gr with context %}
+{% block titulo %}Gráficos — {{ c.nome }}{% endblock %}
+{% block conteudo %}
+{% set proprio = c.id == eu.id %}
+<p><a href="{{ url_for('colaborador', conta_id=c.id) }}">← {{ 'Meus processos' if proprio else c.nome }}</a></p>
+<h1>{{ 'Meus gráficos' if proprio else 'Gráficos de ' ~ c.nome }}</h1>
+<p class="lead">{{ c.funcao or 'Função não informada' }} · {{ c.area or 'Área não informada' }} · {{ r.periodo.dias }} dias observados. Passe o mouse sobre os gráficos para ver os valores.</p>
+
+<div class="grade g2">
+  <div>
+    <h2>Horas por semana em cada processo</h2>
+    <div class="card">{{ gr.barras_h(linhas) }}</div>
+  </div>
+  <div>
+    <h2>Quando os processos começam</h2>
+    <div class="card">{{ gr.calor(r.graficos.calor, r.graficos.calor_horas) }}</div>
+  </div>
+</div>
+
+<h2>Execuções por dia</h2>
+<div class="card">{{ gr.empilhadas(r.graficos.execucoes_por_dia, r.processos) }}</div>
+
+<h2>Onde o tempo vai em cada processo</h2>
+<div class="grade">
+  {% for p in r.processos %}
+  <div class="card">
+    <div class="titulo-linha" style="margin-bottom:10px"><a href="{{ url_for('processo', conta_id=c.id, pid=p.id) }}"><strong>{{ p.documento.nome }}</strong></a><span class="lead">{{ p.duracao_media }} por execução</span></div>
+    {{ gr.composicao(p) }}
+  </div>
+  {% endfor %}
+  <p class="lead" style="font-size:13px">Cada barra é uma execução média dividida por etapa. Em vermelho, as etapas com gargalo; abra o processo para ver os detalhes.</p>
+</div>
+{% endblock %}

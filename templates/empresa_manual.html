@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Manual — {{ empresa.nome }}{% endblock %}
+{% block conteudo %}
+<div class="titulo-linha">
+  <div>
+    <h1>Manual de processos da empresa</h1>
+    <p class="lead">A documentação das funções de cada colaborador, organizada por área. {{ total }} procedimento(s) documentado(s).</p>
+  </div>
+  {% if total %}<a class="btn" href="{{ url_for('empresa_exportar') }}">Baixar manual completo (.md)</a>{% endif %}
+</div>
+
+{% for area, itens in areas.items() %}
+<h2>{{ area }}</h2>
+<div class="grade">
+  {% for c, r in itens %}
+  <div class="card">
+    <div class="titulo-linha">
+      <div>
+        <h3>{{ c.nome }}</h3>
+        <p class="lead">{{ c.funcao or 'Função não informada' }}</p>
+      </div>
+      {% if r %}<a class="btn sec" href="{{ url_for('colaborador_manual', conta_id=c.id) }}">Abrir manual</a>{% endif %}
+    </div>
+    {% if r %}
+      <p style="margin:10px 0 6px">{{ r.descricao_funcao.resumo }}</p>
+      <ol class="manual-indice">
+        {% for p in r.processos %}<li><a href="{{ url_for('colaborador_manual', conta_id=c.id) }}#pop-{{ p.id }}">{{ p.documento.nome }}</a> <span class="lead">· {{ p.frequencia }} · {{ p.passos|length }} etapas</span></li>{% endfor %}
+      </ol>
+    {% else %}
+      <p class="lead" style="margin:10px 0 0">Ainda sem processos documentados.</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

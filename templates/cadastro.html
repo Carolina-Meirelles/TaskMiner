@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block titulo %}Cadastrar empresa — TaskMiner{% endblock %}
+{% block conteudo %}
+<div class="acesso largo">
+  <h1>Cadastrar empresa</h1>
+  <p class="lead">Quem cria o cadastro vira o administrador da conta: cadastra os colaboradores e tem acesso à documentação de todos.</p>
+  <div class="card" style="margin-top:18px">
+    <form class="campos" method="post">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <h2 style="margin:0">Empresa</h2>
+      <div class="linha-campos">
+        <label for="empresa">Nome da empresa <input id="empresa" name="empresa" value="{{ f.empresa }}" required></label>
+        <label for="cnpj">CNPJ <span class="dica">opcional</span><input id="cnpj" name="cnpj" value="{{ f.cnpj }}" placeholder="00.000.000/0000-00"></label>
+      </div>
+      <h2 style="margin:8px 0 0">Administrador(a)</h2>
+      <div class="linha-campos">
+        <label for="nome">Seu nome <input id="nome" name="nome" value="{{ f.nome }}" required></label>
+        <label for="email">E-mail <input id="email" name="email" type="email" value="{{ f.email }}" autocomplete="username" required></label>
+      </div>
+      <div class="linha-campos">
+        <label for="funcao">Sua função <input id="funcao" name="funcao" value="{{ f.funcao }}" placeholder="Ex.: Gerente de Operações"></label>
+        <label for="area">Sua área <input id="area" name="area" value="{{ f.area }}" placeholder="Ex.: Diretoria"></label>
+      </div>
+      <div class="linha-campos">
+        <label for="senha">Senha <span class="dica">mínimo de 8 caracteres</span><input id="senha" name="senha" type="password" autocomplete="new-password" required></label>
+        <label for="senha2">Repita a senha <input id="senha2" name="senha2" type="password" autocomplete="new-password" required></label>
+      </div>
+      <div class="acoes"><button class="btn" type="submit">Cadastrar e entrar</button><a href="{{ url_for('entrar') }}">Já tenho conta</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

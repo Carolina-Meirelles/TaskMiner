@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% import "_graficos.html" as gr with context %}
+{% block titulo %}Gargalos — {{ empresa.nome }}{% endblock %}
+{% block conteudo %}
+<div class="titulo-linha">
+  <div>
+    <h1>Gargalos nos processos</h1>
+    <p class="lead">Pontos em que os processos perdem tempo, medidos nos dados da coleta. Os de severidade alta aparecem primeiro.</p>
+  </div>
+  {% if areas %}
+  <div class="acoes">
+    <label for="f-area" style="font-weight:400;display:flex;align-items:center;gap:8px">Área
+      <select id="f-area" style="width:auto"><option value="">Todas</option>{% for a in areas %}<option>{{ a }}</option>{% endfor %}</select></label>
+    <label for="f-sev" style="font-weight:400;display:flex;align-items:center;gap:8px">Severidade
+      <select id="f-sev" style="width:auto"><option value="">Todas</option><option value="alta">Alta</option><option value="media">Média</option></select></label>
+  </div>
+  {% endif %}
+</div>
+
+<div class="grade g4" style="margin-top:18px">
+  <div class="card kpi"><div class="v">{{ gargalos|length }}</div><div class="l">gargalos identificados</div></div>
+  <div class="card kpi"><div class="v" style="color:var(--danger)">{{ gargalos|selectattr('severidade', 'equalto', 'alta')|list|length }}</div><div class="l">de severidade alta</div></div>
+  <div class="card kpi"><div class="v">{{ gargalos|map(attribute='processo')|unique|list|length }}</div><div class="l">processos afetados</div></div>
+  <div class="card kpi"><div class="v">{{ horas|string|replace('.', ',') }} h</div><div class="l">por semana acima do tempo normal, nas etapas instáveis</div></div>
+</div>
+
+<h2>Lista de gargalos</h2>
+<div id="lista">
+{% for g in gargalos %}
+  <div data-area="{{ g.area }}" data-sev="{{ g.severidade }}" style="margin-bottom:10px">{{ gr.lista_gargalos([g], mostrar_processo=True) }}</div>
+{% else %}
+  <div class="card"><p class="lead" style="margin:0">Nenhum gargalo identificado até agora. Eles aparecem depois que a análise dos colaboradores for feita.</p></div>
+{% endfor %}
+</div>
+<p class="lead" id="sem-resultado" hidden>Nenhum gargalo com esses filtros.</p>
+
+<h2>Como os gargalos são identificados</h2>
+<div class="card">
+  <ul class="limpa" style="margin:0">
+    <li><strong>Etapa concentra o tempo:</strong> uma etapa ocupa 35% ou mais do tempo do processo.</li>
+    <li><strong>Tempo instável:</strong> 1 em cada 10 execuções da etapa leva 2 vezes ou mais o tempo normal (mediana).</li>
+    <li><strong>Interrupções frequentes:</strong> o colaborador sai do processo no meio em 10% ou mais das vezes.</li>
+    <li><strong>Digitação manual repetitiva:</strong> 3 ou mais campos preenchidos à mão na mesma etapa, em toda execução.</li>
+  </ul>
+  <p class="lead" style="margin-bottom:0;font-size:13px">Os limites podem ser ajustados no arquivo config.py.</p>
+</div>
+
+<script>
+  (function () {
+    var fa = document.getElementById("f-area"), fs = document.getElementById("f-sev");
+    if (!fa) return;
+    function filtrar() {
+      var n = 0;
+      document.querySelectorAll("#lista > [data-area]").forEach(function (el) {
+        var ok = (!fa.value || el.dataset.area === fa.value) && (!fs.value || el.dataset.sev === fs.value);
+        el.hidden = !ok; if (ok) n++;
+      });
+      document.getElementById("sem-resultado").hidden = n > 0;
+    }
+    fa.onchange = fs.onchange = filtrar;
+  })();
+</script>
+{% endblock %}

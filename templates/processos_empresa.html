@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% import "_pop.html" as pp with context %}
+{% import "_novos.html" as nv with context %}
+{% block titulo %}Processos — {{ empresa.nome }}{% endblock %}
+{% block conteudo %}
+<div class="titulo-linha">
+  <div>
+    <h1>Processos da empresa</h1>
+    <p class="lead">As atividades de cada colaborador e o passo a passo de cada uma, organizados por área. {{ total }} processo(s) documentado(s).</p>
+  </div>
+  <div class="acoes">
+    <a class="btn sec" href="{{ url_for('colaboradores') }}">Cadastrar colaborador</a>
+    {% if total %}<a class="btn" href="{{ url_for('empresa_exportar') }}">Baixar manual completo (.md)</a>{% endif %}
+  </div>
+</div>
+
+{% if novos %}
+<h2>Processos novos para decidir ({{ novos|length }})</h2>
+<div class="grade">{% for item in novos %}{{ nv.novo_processo(item, True) }}{% endfor %}</div>
+{% endif %}
+
+{% if total %}
+<div class="filtros">
+  <label for="f-area">Área
+    <select id="f-area"><option value="">Todas</option>{% for a in areas if a != 'Sem área definida' %}<option>{{ a }}</option>{% endfor %}</select></label>
+  <label for="f-colab">Colaborador
+    <select id="f-colab"><option value="">Todos</option>{% for c in colabs %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endfor %}</select></label>
+  <label for="f-busca">Buscar <input id="f-busca" type="search" placeholder="Ex.: nota fiscal, SAP"></label>
+</div>
+{% endif %}
+
+<div id="lista-ativ">
+{% for area, itens in areas.items() %}
+<section class="bloco-area" data-area="{{ '' if area == 'Sem área definida' else area }}">
+  <h2 class="area-tit">{{ area }}</h2>
+  {% for c, r in itens %}
+  <div class="bloco-colab" data-colab="{{ c.id }}">
+    <div class="colab-tit">
+      <h3><a href="{{ url_for('colaborador', conta_id=c.id) }}">{{ c.nome }}</a> <span class="lead" style="font-weight:400">· {{ c.funcao or 'Função não informada' }}</span></h3>
+      {% if r %}<span class="lead" style="font-size:13px">{{ r.processos|length }} atividade(s) · observado de {{ fmt_data(r.periodo.inicio) }} a {{ fmt_data(r.periodo.fim) }}</span>{% endif %}
+    </div>
+    {% if r %}
+    <div class="grade">
+      {% for p in r.processos %}{{ pp.atividade(p, c, url_for('processo', conta_id=c.id, pid=p.id)) }}{% endfor %}
+    </div>
+    {% else %}
+    <div class="card"><p class="lead" style="margin:0">Ainda sem atividades documentadas. {% set st = status_coleta(c) %}Situação: <span class="tag {{ st.chave }}">{{ st.texto }}</span> · <a href="{{ url_for('colaborador_editar', conta_id=c.id) }}">ver coleta</a></p></div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endfor %}
+</div>
+<p class="lead" id="sem-ativ" hidden style="margin-top:18px">Nenhuma atividade encontrada com esses filtros.</p>
+
+<script>
+  (function () {
+    var fa = document.getElementById("f-area"), fc = document.getElementById("f-colab"), fb = document.getElementById("f-busca");
+    if (!fa) return;
+    function filtrar() {
+      var a = fa.value, c = fc.value, b = fb.value.trim().toLowerCase(), n = 0;
+      document.querySelectorAll(".bloco-area").forEach(function (sec) {
+        var visArea = 0;
+        sec.querySelectorAll(".bloco-colab").forEach(function (bc) {
+          var visColab = 0, okColab = (!a || sec.dataset.area === a) && (!c || bc.dataset.colab === c);
+          var cards = bc.querySelectorAll(".ativ");
+          cards.forEach(function (card) {
+            var ok = okColab && (!b || card.dataset.busca.indexOf(b) >= 0);
+            card.hidden = !ok; if (ok) visColab++;
+          });
+          var mostrar = okColab && (cards.length ? visColab > 0 : !b);
+          bc.hidden = !mostrar; if (mostrar) visArea++;
+          n += visColab;
+        });
+        sec.hidden = visArea === 0;
+      });
+      document.getElementById("sem-ativ").hidden = n > 0 || (!a && !c && !b);
+    }
+    fa.onchange = fc.onchange = filtrar; fb.oninput = filtrar;
+  })();
+</script>
+{% endblock %}

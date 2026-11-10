@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% import "_graficos.html" as gr with context %}
+{% import "_pop.html" as pp with context %}
+{% block titulo %}{{ p.documento.nome }} — TaskMiner{% endblock %}
+{% block conteudo %}
+{% set d = p.documento %}
+<p><a href="{{ url_for('colaborador', conta_id=c.id) }}">← {{ 'Meus processos' if c.id == eu.id else c.nome }}</a></p>
+<div class="titulo-linha">
+  <div>
+    <h1>{{ d.nome }}</h1>
+    <p class="lead">Responsável: {{ c.nome }} · {{ c.funcao or 'função não informada' }} · {{ c.area or 'área não informada' }}</p>
+    <p class="lead" style="margin-top:6px"><span class="tag {{ p.tipo_frequencia }}">{{ p.frequencia }}</span> &nbsp;<span class="tag ia">documentado por {{ d.gerado_por }}</span></p>
+  </div>
+  <a class="btn" href="{{ url_for('exportar', conta_id=c.id) }}">Exportar manual (.md)</a>
+</div>
+
+<div class="grade g4" style="margin-top:18px">
+  <div class="card kpi"><div class="v">{{ p.duracao_media }}</div><div class="l">duração média</div></div>
+  <div class="card kpi"><div class="v">{{ p.horario_tipico }}</div><div class="l">horário típico ({{ p.janela_horario }})</div></div>
+  <div class="card kpi"><div class="v">{{ p.ocorrencias }}</div><div class="l">execuções ({{ p.execucoes_semana|string|replace(".", ",") }} por semana)</div></div>
+  <div class="card kpi"><div class="v">{{ p.tempo_total }}</div><div class="l">tempo total no período</div></div>
+</div>
+
+<h2>Documentação do processo</h2>
+<div class="card">{{ pp.pop(p, c, codigo='POP ' ~ c.id ~ '.' ~ p.id[1:]) }}</div>
+
+<h2>Gargalos ({{ p.gargalos|length }})</h2>
+{{ gr.lista_gargalos(p.gargalos) }}
+{% if d.analise_gargalos %}<p class="lead" style="margin-top:10px">{{ d.analise_gargalos }}</p>{% endif %}
+
+<div class="grade g2">
+  <div>
+    <h2>Duração de cada execução</h2>
+    <div class="card">{{ gr.dispersao(p) }}</div>
+  </div>
+  <div>
+    <h2>Tempo por etapa</h2>
+    <div class="card">{{ gr.faixas_etapas(p) }}</div>
+  </div>
+</div>
+
+<details class="brutos"><summary><h2 style="display:inline">O que foi observado (dados brutos da coleta)</h2></summary>
+<p class="lead" style="margin:0 0 12px">Ações registradas pelo agente em cada etapa e em quantas execuções elas aparecem. É a base do passo a passo acima.</p>
+<div class="grade">
+  {% for s in p.passos %}
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <strong>{{ loop.index }}. {{ s.app }} — <span class="mono">{{ s.tela }}</span></strong>
+      {% if s.site %}<span class="tag neutra" title="Site identificado pelo endereço no navegador">{{ s.site }} · {{ s.navegador }}</span>{% endif %}
+      <span class="lead" style="margin:0">~{{ s.duracao_media_s }}s nesta etapa</span>
+    </div>
+    {% if s.acoes %}
+    <ul class="limpa">{% for a in s.acoes %}<li>{{ a.texto }} <span class="lead">({{ (a.frequencia * 100)|round|int }}% das vezes)</span></li>{% endfor %}</ul>
+    {% else %}<p class="lead" style="margin:6px 0 0">Apenas consulta da tela, sem cliques identificados.</p>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+</details>
+{% endblock %}
