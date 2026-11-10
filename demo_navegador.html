@@ -1,0 +1,1030 @@
+<title>TaskMiner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Layout: barra escura de produto + coluna de 1140px; telas como rotas por hash (#entrar, #empresa, #c3, #c3-p1) */
+  :root {
+    --bg: #f4f5f2; --card: #ffffff; --ink: #1b1e1d; --muted: #646b68; --line: #dfe2dd; --chip: #eceee9;
+    --accent: #1f6f5c; --accent-ink: #ffffff; --accent-soft: #e0f0ea;
+    --violet: #4b4fa8; --violet-soft: #e9eafa; --warn: #8f4a17; --warn-soft: #f9ecdf; --danger: #a8322d; --danger-soft: #fbe7e5;
+    --bar: #17201d; --bar-ink: #ffffff; --bar-muted: #9fb0aa; --bar-accent: #7fd1b9; --bar-line: #2c3833;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --marca-neutra: #c6ccc7; --grade: #e8ebe7;
+    --q1: #cde2fb; --q2: #9ec5f4; --q3: #5598e7; --q4: #256abf; --q5: #104281; --q-ink: #ffffff;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #121615; --card: #1a201e; --ink: #e6ebe8; --muted: #9aa5a1; --line: #2a3330; --chip: #242c29;
+    --accent: #7fd1b9; --accent-ink: #0f231d; --accent-soft: #1d3a32;
+    --violet: #a9acf0; --violet-soft: #26284a; --warn: #f0b27a; --warn-soft: #3a2a1b; --danger: #f19a94; --danger-soft: #3d1f1d;
+    --bar: #0b0e0d; --bar-ink: #ffffff; --bar-muted: #8a9a95; --bar-accent: #7fd1b9; --bar-line: #26302c;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --marca-neutra: #3d4844; --grade: #252d2a;
+    --q1: #1a3352; --q2: #184f95; --q3: #256abf; --q4: #3987e5; --q5: #86b6ef; --q-ink: #0b0e0d;
+    color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #121615; --card: #1a201e; --ink: #e6ebe8; --muted: #9aa5a1; --line: #2a3330; --chip: #242c29;
+    --accent: #7fd1b9; --accent-ink: #0f231d; --accent-soft: #1d3a32;
+    --violet: #a9acf0; --violet-soft: #26284a; --warn: #f0b27a; --warn-soft: #3a2a1b; --danger: #f19a94; --danger-soft: #3d1f1d;
+    --bar: #0b0e0d; --bar-ink: #ffffff; --bar-muted: #8a9a95; --bar-accent: #7fd1b9; --bar-line: #26302c;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --marca-neutra: #3d4844; --grade: #252d2a;
+    --q1: #1a3352; --q2: #184f95; --q3: #256abf; --q4: #3987e5; --q5: #86b6ef; --q-ink: #0b0e0d;
+    color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); }
+  a { color: var(--accent); text-decoration: none; cursor: pointer; }
+  a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .gut { max-width: 1140px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .faixa { background: var(--warn-soft); color: var(--warn); font-size: 13px; }
+  .faixa .gut { padding-block: 7px; }
+  header { background: var(--bar); color: var(--bar-ink); }
+  .topo { display: flex; align-items: center; gap: 8px 18px; flex-wrap: wrap; padding-block: 12px; }
+  .marca { font-weight: 700; font-size: 17px; color: var(--bar-ink); }
+  .marca span { color: var(--bar-accent); }
+  .marca:hover { text-decoration: none; }
+  .empresa-nome { color: var(--bar-muted); font-size: 13px; padding-left: 14px; border-left: 1px solid var(--bar-line); }
+  nav.menu { display: flex; gap: 4px; flex-wrap: wrap; }
+  nav.menu a { color: var(--bar-muted); font-size: 14px; padding: 5px 10px; border-radius: 6px; }
+  nav.menu a:hover, nav.menu a.ativo { color: var(--bar-ink); background: var(--bar-line); text-decoration: none; }
+  .quem { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--bar-muted); }
+  .quem button { background: none; border: 1px solid var(--bar-line); color: var(--bar-ink); border-radius: 6px; padding: 4px 10px; font: inherit; cursor: pointer; }
+  main.gut { padding-block: 26px 60px; }
+  h1 { font-size: 26px; letter-spacing: -.015em; margin: 0 0 4px; text-wrap: balance; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); margin: 32px 0 12px; font-weight: 600; }
+  h3 { margin: 0 0 4px; font-size: 17px; text-wrap: balance; }
+  .lead { color: var(--muted); margin: 0; }
+  .grade { display: grid; gap: 12px; }
+  .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .g2 { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 0 20px; }
+  .g2 > * { min-width: 0; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+  .kpi .v { font-size: 26px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .kpi .l { color: var(--muted); font-size: 13px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; white-space: nowrap; }
+  .tag.diaria, .tag.documentado { background: var(--accent-soft); color: var(--accent); }
+  .tag.semanal, .tag.coletando { background: var(--violet-soft); color: var(--violet); }
+  .tag.recorrente, .tag.pronto { background: var(--warn-soft); color: var(--warn); }
+  .tag.neutra, .tag.aguardando { background: var(--chip); color: var(--muted); font-weight: 500; }
+  .tag.admin { background: var(--ink); color: var(--bg); }
+  ul.limpa { margin: 6px 0 0; padding-left: 18px; }
+  ul.limpa li { margin: 3px 0; }
+  .mono, .hora { font-family: var(--mono); }
+  .mono { font-size: 13px; }
+  .titulo-linha { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 20px; flex-wrap: wrap; }
+  form.campos { display: grid; gap: 14px; }
+  .linha-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+  label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; }
+  label .dica { font-weight: 400; color: var(--muted); }
+  input, select { font: inherit; font-size: 15px; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; }
+  input:focus, select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; font: inherit; font-size: 14px; font-weight: 600; padding: 9px 16px; border-radius: 8px; border: 1px solid transparent; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+  .btn:hover { text-decoration: none; filter: brightness(1.06); }
+  .btn.sec { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.perigo { background: transparent; color: var(--danger); border-color: var(--danger); }
+  .acoes { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .aviso { padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+  .aviso.ok { background: var(--accent-soft); color: var(--accent); }
+  .aviso.erro { background: var(--danger-soft); color: var(--danger); }
+  .tabela { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 11px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .proc { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 18px; color: inherit; }
+  .proc:hover { border-color: var(--accent); text-decoration: none; }
+  .proc .meta { color: var(--muted); font-size: 13px; }
+  .fluxo { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 13px; }
+  .fluxo .app { background: var(--chip); border-radius: 6px; padding: 2px 8px; color: var(--ink); }
+  .fluxo .seta { color: var(--muted); }
+  .num-dir { text-align: right; }
+  .num-dir .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .num-dir .l { color: var(--muted); font-size: 12px; }
+  .rotina .item { display: grid; grid-template-columns: 60px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .rotina .item:last-child { border-bottom: 0; }
+  .barras { display: flex; flex-direction: column; gap: 9px; }
+  .barra { display: grid; grid-template-columns: 140px minmax(0, 1fr) 80px; gap: 10px; align-items: center; font-size: 13px; }
+  .barra .rot { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trilho { background: var(--chip); border-radius: 4px; height: 12px; overflow: hidden; }
+  .trilho .enc { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .barra .val { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .colunas { display: flex; align-items: flex-end; gap: 8px; height: 190px; padding-top: 6px; }
+  .col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .col .enc { width: 100%; max-width: 52px; background: var(--violet); border-radius: 4px 4px 0 0; }
+  .col .val, .col .rot { color: var(--muted); }
+  ol li { min-width: 0; }
+  .card ol { min-width: 0; }
+  [hidden] { display: none !important; }
+  pre.cmd { white-space: pre-wrap; word-break: break-all; background: var(--bar); color: var(--bar-ink); padding: 12px 14px; border-radius: 8px; overflow-x: auto; font: 13px/1.5 var(--mono); margin: 8px 0 0; max-width: 100%; }
+  /* ---------------- gráficos ---------------- */
+  .gbarras { display: flex; flex-direction: column; gap: 10px; }
+  .gbarra { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) 76px; gap: 12px; align-items: center; font-size: 13px; }
+  .gbarra .rot { display: grid; min-width: 0; }
+  .gbarra .nome { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gbarra .sub { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .gbarra .trilho { height: 14px; background: none; border-radius: 0; }
+  .gbarra .enc { display: block; height: 100%; background: var(--s1); border-radius: 0 4px 4px 0; }
+  .gbarra .enc.destaque { background: var(--danger); }
+  .gbarra .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .comp { display: grid; gap: 8px; }
+  .comp-barra { display: flex; gap: 2px; height: 26px; }
+  .comp-barra .seg { background: var(--marca-neutra); display: flex; align-items: center; justify-content: center; min-width: 4px; }
+  .comp-barra .seg:first-child { border-radius: 4px 0 0 4px; }
+  .comp-barra .seg:last-child { border-radius: 0 4px 4px 0; }
+  .comp-barra .seg.gargalo { background: var(--danger); }
+  .comp-barra .seg-txt { font-size: 12px; font-weight: 700; color: var(--ink); }
+  .comp-barra .seg.gargalo .seg-txt { color: var(--card); }
+  .comp-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+  .comp-leg .gargalo { color: var(--danger); font-weight: 600; }
+  .legenda { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .legenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+  .sw.s1, .s1 { background: var(--s1); } .sw.s2, .s2 { background: var(--s2); } .sw.s3, .s3 { background: var(--s3); }
+  .sw.bola { border-radius: 50%; } .sw.lento { background: var(--danger); }
+  .sw.linha { height: 0; border-top: 2px dashed var(--muted); border-radius: 0; width: 16px; }
+  .sw.caixa-leg { background: var(--s1); opacity: .35; } .sw.med-leg { width: 3px; height: 14px; background: var(--ink); border-radius: 0; }
+  .gcols { display: flex; align-items: flex-end; gap: 6px; height: 200px; padding-top: 8px; }
+  .gcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .gcol .pilha { width: 100%; max-width: 44px; display: flex; flex-direction: column; gap: 2px; }
+  .gcol .pilha span { display: block; min-height: 3px; }
+  .gcol .pilha span:first-child { border-radius: 4px 4px 0 0; }
+  .gcol .val { font-weight: 600; } .gcol .rot { color: var(--muted); }
+  .tabela-dados { margin-top: 12px; font-size: 13px; }
+  .tabela-dados summary { cursor: pointer; color: var(--muted); }
+  .calor-wrap { overflow-x: auto; }
+  .calor { display: grid; gap: 3px; min-width: 420px; font-size: 11px; }
+  .calor .h { color: var(--muted); text-align: center; } .calor .d { color: var(--muted); align-self: center; }
+  .cel { display: flex; align-items: center; justify-content: center; height: 30px; border-radius: 4px; background: var(--chip); color: var(--q-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cel.n1 { background: var(--q1); } .cel.n2 { background: var(--q2); } .cel.n3 { background: var(--q3); } .cel.n4 { background: var(--q4); } .cel.n5 { background: var(--q5); }
+  .calor-esc { display: flex; align-items: center; gap: 4px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .calor-esc .cel { width: 18px; height: 12px; }
+  svg.disp { width: 100%; height: auto; display: block; }
+  svg.disp .grade { stroke: var(--grade); stroke-width: 1; }
+  svg.disp .eixo { fill: var(--muted); font: 11px var(--sans); }
+  svg.disp .mediana { stroke: var(--muted); stroke-width: 2; stroke-dasharray: 5 4; }
+  svg.disp .rot-med { fill: var(--ink); font: 600 12px var(--sans); paint-order: stroke; stroke: var(--card); stroke-width: 5px; stroke-linejoin: round; }
+  svg.disp circle { fill: var(--s1); stroke: var(--card); stroke-width: 2; }
+  svg.disp circle.lento { fill: var(--danger); }
+  svg.disp circle:hover { r: 7; }
+  .faixas { display: flex; flex-direction: column; gap: 12px; }
+  .faixa-l { display: grid; grid-template-columns: 150px minmax(0, 1fr) 80px; gap: 12px; align-items: center; font-size: 13px; }
+  .faixa-l .rot { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trilho-f { position: relative; height: 18px; }
+  .trilho-f .bigode { position: absolute; top: 8px; height: 2px; background: var(--muted); }
+  .trilho-f .caixa { position: absolute; top: 2px; height: 14px; background: var(--s1); opacity: .35; border-radius: 3px; }
+  .trilho-f .caixa.gargalo { background: var(--danger); opacity: .45; }
+  .trilho-f .med { position: absolute; top: 0; width: 3px; height: 18px; background: var(--ink); margin-left: -1px; }
+  .faixa-l .val { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---------------- gargalos ---------------- */
+  .gargalos { display: grid; gap: 10px; }
+  .gargalo-item { border: 1px solid var(--line); border-left-width: 4px; border-radius: 8px; padding: 12px 14px; background: var(--card); }
+  .gargalo-item.sev-alta { border-left-color: var(--danger); }
+  .gargalo-item.sev-media { border-left-color: var(--warn); }
+  .gargalo-item p { margin: 6px 0 0; }
+  .gargalo-item .sug { color: var(--muted); font-size: 14px; }
+  .g-topo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .sev { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .sev-alta .sev { color: var(--danger); } .sev-media .sev { color: var(--warn); }
+  .impacto { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; display: grid; }
+  .impacto small { font-weight: 400; color: var(--muted); font-size: 11px; }
+  .contagem-sev { display: inline-flex; gap: 6px; }
+  .pill-alta { background: var(--danger-soft); color: var(--danger); } .pill-media { background: var(--warn-soft); color: var(--warn); }
+  @media (max-width: 640px) {
+    .gbarra { grid-template-columns: minmax(0, 1fr) 64px; }
+    .gbarra .trilho { grid-column: 1 / -1; grid-row: 2; }
+    .faixa-l { grid-template-columns: minmax(0, 1fr) 70px; }
+    .faixa-l .trilho-f { grid-column: 1 / -1; grid-row: 2; }
+    .impacto { margin-left: 0; text-align: left; }
+  }
+
+  /* ---------------- documentação (POP) ---------------- */
+  .pop { display: grid; gap: 16px; }
+  .pop-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px 16px; flex-wrap: wrap; }
+  .pop-cab > div { min-width: 0; flex: 1 1 320px; }
+  .pop-cod { font: 500 12px var(--mono); color: var(--muted); letter-spacing: .04em; }
+  .pop-nome { font-size: 20px; margin: 2px 0 4px; }
+  .pop-ficha { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin: 0; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .pop-ficha > div { background: var(--bg); padding: 9px 12px; min-width: 0; }
+  .pop-ficha .largo { grid-column: 1 / -1; }
+  .pop-ficha dt { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+  .pop-ficha dd { margin: 2px 0 0; font-size: 14px; }
+  .pop-es { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
+  .pop h4 { margin: 0; font-size: 14px; }
+  .pop-sec { font-size: 12px !important; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); padding-top: 4px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .pop-passos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .pop-passos > li { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .pop-passos > li.com-gargalo { border-color: var(--danger); box-shadow: inset 3px 0 0 var(--danger); }
+  .pp-topo { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; }
+  .pp-num { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: var(--bg); font-weight: 700; font-size: 13px; flex: none; }
+  .pp-tempo { margin-left: auto; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .pop-passos p { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+  .pp-sub { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+  .pp-sub li { display: grid; grid-template-columns: 38px minmax(0, 1fr); font-size: 14px; }
+  .pp-subnum { font: 12px/1.9 var(--mono); color: var(--muted); }
+  details.brutos { margin-top: 32px; }
+  details.brutos > summary { cursor: pointer; list-style-position: outside; margin-bottom: 12px; }
+  .manual-indice { columns: 2; column-gap: 32px; margin: 0; padding-left: 20px; }
+  .manual-indice li { margin: 4px 0; break-inside: avoid; }
+  .rotina-sem { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+  .rotina-sem .dia { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; min-width: 0; }
+  .rotina-sem .dia h4 { margin: 0 0 8px; font-size: 13px; }
+  .rotina-sem .it { font-size: 13px; padding: 6px 0; border-top: 1px solid var(--line); }
+  .rotina-sem .it .hora { font-size: 12px; color: var(--muted); display: block; }
+  @media (max-width: 860px) { .rotina-sem { grid-template-columns: minmax(0, 1fr); } .manual-indice { columns: 1; } }
+  @media (max-width: 640px) { .pop-ficha { grid-template-columns: minmax(0, 1fr); } .pop-es { grid-template-columns: minmax(0, 1fr); } .pp-tempo { margin-left: 0; } }
+
+  /* ---------------- tela principal: atividades ---------------- */
+  .ativ { display: grid; gap: 12px; }
+  .ativ-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px 16px; flex-wrap: wrap; }
+  .ativ-cab > div { min-width: 0; flex: 1 1 320px; }
+  .ativ-cab h3 { font-size: 19px; }
+  .ativ-cab h3 a { color: var(--ink); }
+  .ativ-btn { padding: 7px 12px; font-size: 13px; }
+  .ativ-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: 13px; color: var(--muted); }
+  .ativ-meta b { color: var(--ink); font-weight: 600; }
+  .ativ-passos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+  .ativ-passos > li { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; min-width: 0; }
+  .ap-topo { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; align-items: start; font-size: 14px; line-height: 1.35; }
+  .ap-topo strong { display: block; padding-top: 3px; }
+  .ap-info { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .ativ-passos .pp-sub { margin-top: 8px; }
+  .ativ-passos .pp-sub li { font-size: 13px; grid-template-columns: 32px minmax(0, 1fr); }
+  .filtros { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 18px; }
+  .filtros label { font-weight: 400; display: flex; align-items: center; gap: 8px; }
+  .filtros select, .filtros input { width: auto; }
+  .filtros input[type=search] { min-width: 0; width: 240px; max-width: 100%; }
+  .area-tit { display: flex; align-items: baseline; gap: 10px; }
+  .colab-tit { display: flex; justify-content: space-between; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; margin: 18px 0 10px; }
+  .colab-tit h3 { font-size: 16px; }
+  .mini-kpis { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: 14px; color: var(--muted); margin-top: 10px; }
+  .mini-kpis b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* ---------------- melhorias ---------------- */
+  .abas { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-top: 22px; }
+  .abas button { font: inherit; font-size: 15px; font-weight: 600; padding: 10px 14px; background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted); cursor: pointer; margin-bottom: -1px; }
+  .abas button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .abas .cont { display: inline-block; min-width: 22px; padding: 0 6px; margin-left: 6px; border-radius: 99px; background: var(--chip); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .matriz { display: grid; grid-template-columns: 90px repeat(3, minmax(0, 1fr)); gap: 6px; font-size: 13px; }
+  .matriz .eixo { color: var(--muted); align-self: center; font-size: 12px; }
+  .matriz .cab { color: var(--muted); text-align: center; font-size: 12px; }
+  .matriz .cel-m { border-radius: 8px; padding: 12px 8px; text-align: center; background: var(--bg); border: 1px solid var(--line); }
+  .matriz .cel-m b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .matriz .cel-m.melhor { background: var(--accent-soft); border-color: var(--accent); }
+  .matriz .cel-m.bom { background: var(--violet-soft); }
+  .sug { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--card); display: grid; gap: 6px; }
+  .sug.feita { opacity: .65; }
+  .sug-topo { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .sug-topo strong { font-size: 16px; }
+  .sug p { margin: 0; }
+  .sug .o-que { color: var(--muted); font-size: 14px; }
+  .sug-rodape { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .sug-rodape form { display: flex; gap: 6px; align-items: center; margin: 0 0 0 auto; }
+  .sug-rodape select { width: auto; padding: 5px 8px; font-size: 13px; }
+  .pri-alto { background: var(--danger-soft); color: var(--danger); }
+  .pri-rapido { background: var(--accent-soft); color: var(--accent); }
+  .pri-avaliar { background: var(--chip); color: var(--muted); }
+  .st-nova { background: var(--chip); color: var(--muted); } .st-analise { background: var(--violet-soft); color: var(--violet); }
+  .st-andamento { background: var(--warn-soft); color: var(--warn); } .st-concluida { background: var(--accent-soft); color: var(--accent); }
+  .st-descartada { background: var(--chip); color: var(--muted); text-decoration: line-through; }
+  @media (max-width: 640px) { .matriz { grid-template-columns: 64px repeat(3, minmax(0, 1fr)); } .sug-rodape form { margin-left: 0; } }
+
+  /* ---------------- processos novos ---------------- */
+  .novo-proc { display: grid; gap: 8px; border: 1px solid var(--violet); box-shadow: inset 4px 0 0 var(--violet); }
+  .novo-proc h3 { margin: 0; }
+  .np-topo { display: flex; gap: 8px; flex-wrap: wrap; }
+  .np-tag { background: var(--violet-soft); color: var(--violet); }
+  .np-det summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .np-passos { margin: 8px 0 0; padding-left: 20px; font-size: 14px; display: grid; gap: 4px; }
+  .np-pergunta { margin: 4px 0 0; }
+  .acoes form { margin: 0; }
+  .tag.fixado { background: var(--violet-soft); color: var(--violet); }
+
+  .acesso { max-width: 460px; margin: 30px auto 0; }
+  .contas-demo { display: grid; gap: 8px; margin-top: 10px; }
+  .contas-demo button { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; text-align: left; font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+  .contas-demo button:hover { border-color: var(--accent); }
+  .contas-demo small { color: var(--muted); grid-column: 1; }
+  @media (max-width: 860px) { .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } .g2 { grid-template-columns: minmax(0, 1fr); } .quem { margin-left: 0; } }
+  @media (max-width: 520px) {
+    .barra { grid-template-columns: 90px minmax(0, 1fr) 64px; }
+    .colunas { gap: 3px; } .col { font-size: 10px; }
+    .proc { grid-template-columns: minmax(0, 1fr); } .num-dir { text-align: left; }
+    .kpi .v { font-size: 21px; }
+    .empresa-nome { border-left: 0; padding-left: 0; }
+  }
+</style>
+
+<div class="faixa"><div class="gut">Demonstração com 2 semanas de dados simulados, analisados pelo TaskMiner. Cadastros feitos aqui ficam só neste navegador.</div></div>
+<header><div class="gut topo" id="topo"></div></header>
+<main class="gut" id="app"></main>
+
+<script>
+const BASE = {"empresa":{"nome":"Empresa Demo Ltda.","cnpj":"12.345.678/0001-90"},"contas":[{"id":3,"nome":"Bruno Lima","email":"bruno.lima@demo.com.br","funcao":"Executivo de Vendas","area":"Comercial","papel":"colaborador","ativo":true,"token":"NrJWWBnjchpA"},{"id":1,"nome":"Marina Costa","email":"marina@demo.com.br","funcao":"Gerente de Operações","area":"Diretoria","papel":"admin","ativo":true,"token":"BggjbU_nuYpG"},{"id":2,"nome":"Ana Souza","email":"ana.souza@demo.com.br","funcao":"Analista de Contas a Pagar","area":"Financeiro","papel":"colaborador","ativo":true,"token":"ECzumWv1rmNm"},{"id":4,"nome":"Carla Mendes","email":"carla.mendes@demo.com.br","funcao":"Analista de RH","area":"Recursos Humanos","papel":"colaborador","ativo":true,"token":"WmmdthtUXCUR"}],"resultados":{"3":{"usuario":"bruno.lima@demo.com.br","gerado_em":"2026-11-04T11:28:47","periodo":{"inicio":"2026-10-21","fim":"2026-11-03","dias":10},"estatisticas":{"eventos":3475,"trocas_de_janela":1652,"tempo_ativo_s":272026,"tempo_ativo":"75h 33min","media_diaria":"7h 33min","tempo_em_processos_s":50405,"tempo_em_processos":"14h 00min","percentual_repetitivo":18.5,"tempo_por_app":[{"app":"Teams","segundos":68768,"texto":"19h 06min"},{"app":"Outlook","segundos":39923,"texto":"11h 05min"},{"app":"Portal de Notícias","segundos":29781,"texto":"8h 16min"},{"app":"Portal do Colaborador","segundos":24604,"texto":"6h 50min"},{"app":"Google Drive","segundos":20370,"texto":"5h 39min"},{"app":"WhatsApp Web","segundos":20339,"texto":"5h 38min"},{"app":"Previsão do tempo","segundos":18986,"texto":"5h 16min"},{"app":"Explorador de Arquivos","segundos":16977,"texto":"4h 42min"},{"app":"CRM Vendas","segundos":15765,"texto":"4h 22min"},{"app":"SAP","segundos":11675,"texto":"3h 14min"}],"tempo_por_dia":[["2026-10-21",27650],["2026-10-22",27167],["2026-10-23",27438],["2026-10-26",28169],["2026-10-27",27312],["2026-10-28",27038],["2026-10-29",26252],["2026-10-30",26873],["2026-11-02",27061],["2026-11-03",27065]]},"graficos":{"calor":[[4,3,0,0,0,8,2,0,0,0,0],[5,2,0,0,0,6,0,0,0,0,0],[5,4,0,0,0,9,0,0,0,0,0],[3,6,0,0,0,8,2,0,0,0,0],[5,1,0,0,0,10,0,0,0,0,0]],"calor_horas":[8,9,10,11,12,13,14,15,16,17,18],"execucoes_por_dia":[{"dia":"2026-10-21","por_processo":{"p1":8,"p2":1}},{"dia":"2026-10-22","por_processo":{"p1":8,"p2":1}},{"dia":"2026-10-23","por_processo":{"p1":7,"p2":1}},{"dia":"2026-10-26","por_processo":{"p1":6,"p2":1,"p3":1}},{"dia":"2026-10-27","por_processo":{"p1":5,"p2":1}},{"dia":"2026-10-28","por_processo":{"p1":8,"p2":1}},{"dia":"2026-10-29","por_processo":{"p1":9,"p2":1}},{"dia":"2026-10-30","por_processo":{"p1":7,"p2":1}},{"dia":"2026-11-02","por_processo":{"p1":7,"p2":1,"p3":1}},{"dia":"2026-11-03","por_processo":{"p1":6,"p2":1}}]},"candidatos":[],"rotina":[{"id":"p2","horario":"08:36","frequencia":"Diária — 1 vez por dia","tipo_frequencia":"diaria"},{"id":"p1","horario":"13:12","frequencia":"Diária — cerca de 7 vezes por dia","tipo_frequencia":"diaria"},{"id":"p3","horario":"14:29","frequencia":"Semanal — às segunda-feiras","tipo_frequencia":"semanal"}],"processos":[{"id":"p1","aplicativos":["Outlook","CRM Vendas","SAP","Outlook"],"ocorrencias":71,"tipo_frequencia":"diaria","frequencia":"Diária — cerca de 7 vezes por dia","horario_tipico":"13:12","janela_horario":"08:42–14:03","duracao_media_s":591,"duracao_media":"9min 51s","tempo_total_s":41979,"tempo_total":"11h 39min","execucoes_semana":35.5,"horas_semana":5.83,"passos":[{"app":"Outlook","navegador":null,"site":null,"tela":"Caixa de Entrada - [email]","duracao_media_s":62,"acoes":[{"t":"Clicar em item da lista (varia a cada execução — ex.: “Pedido # - Hotel Atlântico”)","f":1.0}],"mediana_s":57,"p25_s":47,"p75_s":72,"p90_s":87,"min_s":23,"max_s":245},{"app":"CRM Vendas","navegador":"Chrome","site":"crm.empresademo.com.br","tela":"Oportunidades","duracao_media_s":192,"acoes":[{"t":"Preencher o campo “Buscar cliente”","f":1.0},{"t":"Pressionar Enter","f":1.0},{"t":"Clicar em botão “Converter em pedido”","f":1.0}],"mediana_s":151,"p25_s":122,"p75_s":224,"p90_s":369,"min_s":81,"max_s":521},{"app":"SAP","navegador":null,"site":null,"tela":"Criar ordem do cliente: Síntese","duracao_media_s":164,"acoes":[{"t":"Preencher o campo “Emissor da ordem”","f":1.0},{"t":"Preencher o campo “Material”","f":1.0},{"t":"Preencher o campo “Quantidade”","f":1.0},{"t":"Pressionar Enter","f":1.0},{"t":"Clicar em botão “Condições”","f":0.8},{"t":"Clicar em botão “Gravar”","f":1.0}],"mediana_s":163,"p25_s":144,"p75_s":182,"p90_s":205,"min_s":106,"max_s":235},{"app":"Outlook","navegador":null,"site":null,"tela":"Confirmação do pedido # - Mensagem (HTML)","duracao_media_s":173,"acoes":[{"t":"Preencher o campo “Para”","f":1.0},{"t":"Preencher o campo “Corpo da mensagem”","f":1.0},{"t":"Clicar em botão “Enviar”","f":1.0}],"mediana_s":168,"p25_s":151,"p75_s":200,"p90_s":224,"min_s":89,"max_s":268}],"execucoes":[[1792583268,621,[105,148,197,171]],[1792584358,612,[40,182,179,211]],[1792584970,521,[60,146,157,158]],[1792598988,708,[51,369,165,123]],[1792599854,696,[90,167,181,258]],[1792600929,451,[45,100,146,161]],[1792601380,538,[43,160,164,172]],[1792601918,619,[70,266,176,107]],[1792670018,738,[245,157,167,170]],[1792670978,558,[67,146,196,150]],[1792671536,607,[70,188,158,191]],[1792684910,753,[41,323,183,207]],[1792686106,652,[34,317,130,170]],[1792687082,634,[73,109,223,229]],[1792687996,643,[40,224,166,213]],[1792688639,601,[54,166,213,168]],[1792756247,485,[52,121,176,136]],[1792756732,554,[69,83,187,216]],[1792771312,690,[71,374,106,139]],[1792772140,498,[60,180,110,148]],[1792772638,350,[41,84,134,91]],[1792773616,451,[49,130,130,142]],[1792774066,487,[48,115,165,159]],[1793016000,589,[48,126,214,201]],[1793016589,554,[51,161,153,189]],[1793031138,671,[55,300,131,184]],[1793031809,463,[56,116,125,165]],[1793032461,705,[50,382,130,143]],[1793033165,530,[96,125,149,161]],[1793101664,600,[93,167,179,161]],[1793104441,416,[35,89,140,152]],[1793117236,864,[72,370,199,224]],[1793118312,512,[59,170,132,151]],[1793118824,531,[34,224,124,149]],[1793187867,458,[56,94,166,143]],[1793188325,970,[80,441,205,244]],[1793189294,547,[57,163,179,149]],[1793189842,534,[39,124,173,198]],[1793204026,520,[47,137,144,192]],[1793204915,444,[43,112,136,153]],[1793205902,482,[82,101,145,155]],[1793206384,869,[62,455,159,193]],[1793275583,899,[56,521,157,164]],[1793276482,575,[84,159,155,176]],[1793277057,476,[54,124,147,152]],[1793277860,504,[43,127,157,178]],[1793290326,549,[62,152,184,151]],[1793290874,764,[60,364,144,196]],[1793292169,568,[47,151,163,206]],[1793292737,641,[57,170,145,268]],[1793293377,660,[72,204,182,201]],[1793361290,506,[74,89,168,175]],[1793361796,344,[23,81,151,89]],[1793376550,642,[70,138,209,225]],[1793377192,668,[94,117,235,222]],[1793377860,535,[55,121,143,217]],[1793378938,455,[31,112,129,183]],[1793379393,742,[93,313,205,131]],[1793619751,430,[33,98,136,163]],[1793620181,640,[63,316,121,141]],[1793621067,580,[71,169,188,152]],[1793635840,541,[57,134,179,170]],[1793636846,592,[56,142,216,178]],[1793638007,712,[69,361,173,109]],[1793638719,529,[36,238,156,99]],[1793706260,545,[76,132,136,201]],[1793706805,897,[36,418,199,244]],[1793707702,575,[62,143,213,156]],[1793722294,536,[81,149,147,159]],[1793722830,587,[87,121,146,234]],[1793723417,561,[74,130,200,157]]],"interrupcoes":{},"assinatura":"8115dd8f8597","fixado_pelo_gestor":false,"gargalos":[{"tipo":"manual","titulo":"Digitação manual repetitiva","etapa":2,"severidade":"alta","detalhe":"A etapa 3 (SAP) tem 3 campos preenchidos à mão em toda execução, cerca de 36 vezes por semana.","sugestao":"Dados digitados de novo a cada execução são candidatos a importação automática, integração entre sistemas ou um robô (RPA).","horas_semana":1.62,"metrica":"por semana nesta etapa"},{"tipo":"instavel","titulo":"Tempo instável","etapa":1,"severidade":"media","detalhe":"Na etapa 2 (CRM Vendas) o normal é 2min 31s, mas 1 em cada 10 execuções passa de 6min 09s (até 8min 41s).","sugestao":"Picos assim costumam vir de lentidão do sistema, casos fora do padrão ou dependência de outra pessoa. Vale registrar quando acontece para achar a causa.","horas_semana":0.56,"metrica":"por semana acima do tempo normal"}],"documento":{"nome":"Registrar pedidos de venda","objetivo":"Transformar o pedido recebido por e-mail em ordem de venda no SAP e confirmar o registro com o cliente.","gatilho":"Chegada de um e-mail de pedido de cliente. Acontece cerca de 7 vezes por dia.","responsavel":"Executivo de Vendas","passos":[{"titulo":"Abrir o pedido recebido","sistema":"Outlook","tempo":"cerca de 1 min","descricao":"Os pedidos chegam com o assunto “Pedido número - cliente”.","subpassos":["Abra o e-mail do pedido na Caixa de Entrada e confira os itens pedidos"]},{"titulo":"Converter a oportunidade em pedido no CRM","sistema":"CRM Vendas","tempo":"cerca de 2 min 20 s (pode passar de 7 min quando o CRM está lento)","descricao":"No CRM Vendas (crm.empresademo.com.br), abra a tela de Oportunidades.","subpassos":["Busque o cliente no campo “Buscar cliente” e confirme com Enter","Clique em “Converter em pedido” e aguarde a geração"]},{"titulo":"Criar a ordem de venda no SAP","sistema":"SAP","tempo":"cerca de 2 min 45 s","descricao":"Na transação “Criar ordem do cliente”, lance o pedido.","subpassos":["Preencha o Emissor da ordem (código do cliente)","Preencha o Material e a Quantidade de cada item e confirme com Enter","Clique em “Condições” para conferir preços e condições (feito na maioria dos pedidos)","Clique em “Gravar”"]},{"titulo":"Confirmar o pedido com o cliente","sistema":"Outlook","tempo":"cerca de 2 min 45 s","descricao":"Responda com o e-mail “Confirmação do pedido número”.","subpassos":["Informe o cliente no campo “Para”","Escreva a confirmação com os dados da ordem","Clique em “Enviar”"]}],"entradas":["E-mail do cliente com o pedido"],"saidas":["Ordem de venda gravada no SAP","E-mail de confirmação enviado ao cliente"],"pontos_de_atencao":["A conversão no CRM às vezes demora; aguarde terminar antes de lançar no SAP para não criar o pedido em duplicidade.","Cliente, material e quantidade são digitados no CRM e de novo no SAP; confira se os dois batem."],"oportunidades_de_automacao":["Integrar CRM e SAP para que a ordem seja criada automaticamente ao converter a oportunidade.","Gerar o e-mail de confirmação a partir da ordem gravada."],"analise_gargalos":"Há dois pontos de perda: a digitação repetida no SAP e a instabilidade do CRM na conversão. A integração entre CRM e SAP resolve os dois de uma vez e é a prioridade.","gerado_por":"Claude"}},{"id":"p2","aplicativos":["CRM Vendas","Excel","Teams"],"ocorrencias":10,"tipo_frequencia":"diaria","frequencia":"Diária — 1 vez por dia","horario_tipico":"08:36","janela_horario":"08:31–08:46","duracao_media_s":602,"duracao_media":"10min 02s","tempo_total_s":6019,"tempo_total":"1h 40min","execucoes_semana":5.0,"horas_semana":0.84,"passos":[{"app":"CRM Vendas","navegador":"Chrome","site":"crm.empresademo.com.br","tela":"Relatórios","duracao_media_s":166,"acoes":[{"t":"Clicar em link “Funil por etapa”","f":1.0},{"t":"Clicar em botão “Exportar para Excel”","f":1.0}],"mediana_s":174,"p25_s":129,"p75_s":191,"p90_s":212,"min_s":115,"max_s":232},{"app":"Excel","navegador":null,"site":null,"tela":"Forecast_Comercial.xlsx","duracao_media_s":321,"acoes":[{"t":"Clicar em menu “Atualizar tudo”","f":1.0},{"t":"Preencher o campo “Célula”","f":1.0},{"t":"Usar o atalho Ctrl+S (Salvar)","f":1.0}],"mediana_s":305,"p25_s":262,"p75_s":379,"p90_s":396,"min_s":242,"max_s":430},{"app":"Teams","navegador":null,"site":null,"tela":"Equipe Comercial","duracao_media_s":115,"acoes":[{"t":"Preencher o campo “Digite uma mensagem”","f":1.0},{"t":"Clicar em botão “Anexar”","f":1.0},{"t":"Pressionar Enter","f":1.0}],"mediana_s":122,"p25_s":93,"p75_s":133,"p90_s":155,"min_s":60,"max_s":155}],"execucoes":[[1792582596,436,[133,242,60]],[1792669317,493,[128,273,92]],[1792755403,729,[181,392,155]],[1793015211,738,[194,430,114]],[1793100740,526,[118,313,95]],[1793187062,769,[232,383,155]],[1793274243,639,[210,297,132]],[1793360524,554,[174,250,130]],[1793619228,459,[115,258,86]],[1793705568,677,[175,368,134]]],"interrupcoes":{},"assinatura":"04b83dca4d9c","fixado_pelo_gestor":false,"gargalos":[{"tipo":"etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapa":1,"severidade":"alta","detalhe":"A etapa 2 (Excel) leva em média 5min 21s, 53% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","horas_semana":0.45,"metrica":"por semana nesta etapa"}],"documento":{"nome":"Atualizar a previsão de vendas","objetivo":"Atualizar a projeção de vendas a partir do funil do CRM e compartilhar com a equipe comercial.","gatilho":"Primeira tarefa do dia, por volta das 8h40.","responsavel":"Executivo de Vendas","passos":[{"titulo":"Exportar o funil do CRM","sistema":"CRM Vendas","tempo":"cerca de 2 min 45 s","descricao":"No CRM, acesse Relatórios.","subpassos":["Clique em “Funil por etapa”","Clique em “Exportar para Excel”"]},{"titulo":"Atualizar a planilha de forecast","sistema":"Excel","tempo":"cerca de 5 min 45 s","descricao":"Abra a planilha Forecast_Comercial.xlsx.","subpassos":["Clique em “Atualizar tudo” para carregar o funil exportado","Ajuste a projeção com as informações do dia","Salve a planilha (Ctrl+S)"]},{"titulo":"Compartilhar com a equipe","sistema":"Teams","tempo":"cerca de 1 min 40 s","descricao":"No canal Equipe Comercial do Teams.","subpassos":["Escreva o resumo da previsão","Anexe a planilha","Envie a mensagem (Enter)"]}],"entradas":["Funil de oportunidades exportado do CRM"],"saidas":["Planilha Forecast_Comercial.xlsx atualizada","Mensagem no canal Equipe Comercial"],"pontos_de_atencao":["A etapa do Excel ocupa 56% do tempo; os ajustes manuais na projeção são o ponto que mais varia."],"oportunidades_de_automacao":["Publicar a previsão em um painel ligado ao CRM, dispensando a exportação diária e o envio da planilha."],"analise_gargalos":"O tempo está na planilha. Como o processo é diário e curto, a melhoria vale mais pela padronização da previsão do que pelas horas economizadas.","gerado_por":"Claude"}},{"id":"p3","aplicativos":["CRM Vendas","Excel","PowerPoint","Outlook"],"ocorrencias":2,"tipo_frequencia":"semanal","frequencia":"Semanal — às segunda-feiras","horario_tipico":"14:29","janela_horario":"14:07–14:29","duracao_media_s":1204,"duracao_media":"20min 04s","tempo_total_s":2407,"tempo_total":"40min 07s","execucoes_semana":1.0,"horas_semana":0.33,"passos":[{"app":"CRM Vendas","navegador":"Chrome","site":"crm.empresademo.com.br","tela":"Painel de metas","duracao_media_s":250,"acoes":[{"t":"Clicar em botão “Filtrar semana anterior”","f":1.0},{"t":"Clicar em botão “Exportar para Excel”","f":1.0}],"mediana_s":250,"p25_s":245,"p75_s":256,"p90_s":259,"min_s":239,"max_s":262},{"app":"Excel","navegador":null,"site":null,"tela":"Metas_Semana_#.xlsx","duracao_media_s":427,"acoes":[{"t":"Clicar em botão “Gráfico Dinâmico”","f":1.0},{"t":"Usar o atalho Ctrl+C (Copiar)","f":1.0}],"mediana_s":427,"p25_s":425,"p75_s":430,"p90_s":431,"min_s":422,"max_s":432},{"app":"PowerPoint","navegador":null,"site":null,"tela":"Reuniao_Comercial.pptx","duracao_media_s":389,"acoes":[{"t":"Usar o atalho Ctrl+V (Colar)","f":1.0},{"t":"Usar o atalho Ctrl+S (Salvar)","f":1.0}],"mediana_s":389,"p25_s":351,"p75_s":426,"p90_s":449,"min_s":314,"max_s":464},{"app":"Outlook","navegador":null,"site":null,"tela":"Resultado semanal de metas - Mensagem (HTML)","duracao_media_s":137,"acoes":[{"t":"Preencher o campo “Para”","f":1.0},{"t":"Clicar em botão “Anexar arquivo”","f":1.0},{"t":"Clicar em botão “Enviar”","f":1.0}],"mediana_s":137,"p25_s":116,"p75_s":159,"p90_s":171,"min_s":95,"max_s":180}],"execucoes":[[1793035748,1070,[239,422,314,95]],[1793639249,1338,[262,432,464,180]]],"interrupcoes":{},"assinatura":"5d67587ff659","fixado_pelo_gestor":false,"gargalos":[{"tipo":"etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapa":1,"severidade":"media","detalhe":"A etapa 2 (Excel) leva em média 7min 07s, 35% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","horas_semana":0.12,"metrica":"por semana nesta etapa"}],"documento":{"nome":"Apresentar o resultado de metas","objetivo":"Levantar o resultado de metas da semana anterior e enviar a apresentação para a reunião comercial.","gatilho":"Toda segunda-feira, por volta das 14h.","responsavel":"Executivo de Vendas","passos":[{"titulo":"Exportar as metas do CRM","sistema":"CRM Vendas","tempo":"cerca de 3 min 25 s","descricao":"No CRM, abra o Painel de metas.","subpassos":["Clique em “Filtrar semana anterior”","Clique em “Exportar para Excel”"]},{"titulo":"Montar o gráfico na planilha","sistema":"Excel","tempo":"cerca de 6 min 15 s","descricao":"Abra a planilha Metas_Semana_nº.","subpassos":["Crie ou atualize o “Gráfico Dinâmico”","Copie o gráfico (Ctrl+C)"]},{"titulo":"Atualizar a apresentação da reunião","sistema":"PowerPoint","tempo":"cerca de 5 min 45 s","descricao":"Use a apresentação Reuniao_Comercial.pptx.","subpassos":["Cole o gráfico no slide (Ctrl+V)","Salve a apresentação (Ctrl+S)"]},{"titulo":"Enviar a apresentação","sistema":"Outlook","tempo":"cerca de 2 min","descricao":"Crie o e-mail “Resultado semanal de metas”.","subpassos":["Informe os destinatários","Anexe a apresentação","Clique em “Enviar”"]}],"entradas":["Painel de metas do CRM"],"saidas":["Apresentação Reuniao_Comercial.pptx atualizada","E-mail com o resultado de metas"],"pontos_de_atencao":["Confira se o filtro do CRM está na semana anterior completa antes de exportar."],"oportunidades_de_automacao":["Usar o próprio painel de metas do CRM na reunião, sem montar o gráfico no Excel e no PowerPoint."],"analise_gargalos":"A planilha concentra 36% do tempo. É um processo semanal e curto; a principal oportunidade é eliminar a cópia do gráfico entre três programas.","gerado_por":"Claude"}}],"descricao_funcao":{"cargo_provavel":"Executivo de Vendas","resumo":"Transforma os pedidos recebidos dos clientes em ordens de venda no SAP, mantém a previsão de vendas atualizada e apresenta o resultado de metas toda segunda-feira. A maior parte do tempo repetitivo vai para o registro de pedidos, cerca de 7 por dia, que passa por e-mail, CRM e SAP. O que foi observado é mais operacional do que o esperado para um executivo de vendas: boa parte da rotina é entrada de pedidos.","responsabilidades":["Registrar no SAP os pedidos recebidos por e-mail e confirmar com o cliente","Atualizar diariamente a previsão de vendas e compartilhar com a equipe","Preparar e enviar toda segunda-feira o resultado de metas da semana anterior"],"sistemas_utilizados":["CRM Vendas","SAP","Excel","Outlook","Teams","PowerPoint"],"competencias":["Atendimento a clientes","CRM e SAP (vendas)","Análise de funil e metas em Excel"],"recomendacoes":["Integrar o CRM ao SAP para que a ordem de venda seja criada sem redigitar cliente, material e quantidade.","Verificar a lentidão do CRM ao converter oportunidades em pedido, que às vezes passa de 7 minutos.","Avaliar se a entrada de pedidos pode ir para uma função de apoio, liberando o executivo para vendas."],"gerado_por":"Claude"},"melhorias":[{"chave":"3-12ce4f398a72","tipo":"gargalo_manual","titulo":"Digitação manual repetitiva","etapas":[3],"detalhe":"A etapa 3 (SAP) tem 3 campos preenchidos à mão em toda execução, cerca de 36 vezes por semana.","sugestao":"Dados digitados de novo a cada execução são candidatos a importação automática, integração entre sistemas ou um robô (RPA).","origem":"gargalo","esforco":"alto","esforco_txt":"Esforço alto","horas_semana":1.62,"prioridade":"alto","prioridade_txt":"Alto impacto","severidade":"alta","processo":"Registrar pedidos de venda","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p1"},{"chave":"3-b44790b20c67","tipo":"email_manual","titulo":"E-mail escrito à mão a cada execução","etapas":[4],"detalhe":"Na etapa 4, destinatários e texto do e-mail são digitados de novo toda vez (cerca de 36 por semana).","sugestao":"Criar um modelo de e-mail (Etapas Rápidas ou Modelos do Outlook) com destinatários e texto prontos, ou gerar o e-mail automaticamente a partir do sistema.","origem":"padrao","esforco":"baixo","esforco_txt":"Esforço baixo","horas_semana":1.71,"prioridade":"rapido","prioridade_txt":"Ganho rápido","processo":"Registrar pedidos de venda","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p1"},{"chave":"3-90dda865bbdf","tipo":"email_manual","titulo":"E-mail escrito à mão a cada execução","etapas":[4],"detalhe":"Na etapa 4, destinatários e texto do e-mail são digitados de novo toda vez (cerca de 1 por semana).","sugestao":"Criar um modelo de e-mail (Etapas Rápidas ou Modelos do Outlook) com destinatários e texto prontos, ou gerar o e-mail automaticamente a partir do sistema.","origem":"padrao","esforco":"baixo","esforco_txt":"Esforço baixo","horas_semana":0.04,"prioridade":"rapido","prioridade_txt":"Ganho rápido","processo":"Apresentar o resultado de metas","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p3"},{"chave":"3-9e40219910be","tipo":"exportar_importar","titulo":"Exportação manual do CRM Vendas para o Excel","etapas":[1,2],"detalhe":"Os dados saem do CRM Vendas por exportação (etapa 1) e são carregados à mão no Excel (etapa 2).","sugestao":"Agendar a exportação ou conectar o Excel direto à fonte (conector, API ou ferramenta de BI).","origem":"padrao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.68,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Atualizar a previsão de vendas","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p2"},{"chave":"3-02f9a6c4ede1","tipo":"gargalo_instavel","titulo":"Tempo instável","etapas":[2],"detalhe":"Na etapa 2 (CRM Vendas) o normal é 2min 31s, mas 1 em cada 10 execuções passa de 6min 09s (até 8min 41s).","sugestao":"Picos assim costumam vir de lentidão do sistema, casos fora do padrão ou dependência de outra pessoa. Vale registrar quando acontece para achar a causa.","origem":"gargalo","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.56,"prioridade":"avaliar","prioridade_txt":"Avaliar","severidade":"media","processo":"Registrar pedidos de venda","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p1"},{"chave":"3-3c78b30c05a9","tipo":"gargalo_etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapas":[2],"detalhe":"A etapa 2 (Excel) leva em média 5min 21s, 53% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","origem":"gargalo","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.45,"prioridade":"avaliar","prioridade_txt":"Avaliar","severidade":"alta","processo":"Atualizar a previsão de vendas","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p2"},{"chave":"3-80983de33b2c","tipo":"exportar_importar","titulo":"Exportação manual do CRM Vendas para o PowerPoint","etapas":[1,2,3],"detalhe":"Os dados saem do CRM Vendas por exportação (etapa 1) e são carregados à mão no PowerPoint (etapa 3).","sugestao":"Agendar a exportação ou conectar o PowerPoint direto à fonte (conector, API ou ferramenta de BI).","origem":"padrao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.3,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Apresentar o resultado de metas","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p3"},{"chave":"3-f72858628913","tipo":"copiar_colar","titulo":"Informação copiada do Excel e colada no PowerPoint","etapas":[2,3],"detalhe":"Nas etapas 2 e 3, a informação passa do Excel para o PowerPoint com copiar e colar, cerca de 1 vez(es) por semana.","sugestao":"Ligar o PowerPoint direto aos dados do Excel (vínculo, importação ou integração), para que a informação se atualize sem copiar e colar.","origem":"padrao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.23,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Apresentar o resultado de metas","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p3"},{"chave":"3-86f625586b15","tipo":"gargalo_etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapas":[2],"detalhe":"A etapa 2 (Excel) leva em média 7min 07s, 35% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","origem":"gargalo","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.12,"prioridade":"avaliar","prioridade_txt":"Avaliar","severidade":"media","processo":"Apresentar o resultado de metas","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p3"},{"chave":"3-926791ca45d6","tipo":"doc","titulo":"Sugestão do Claude","etapas":[],"detalhe":"Integrar CRM e SAP para que a ordem seja criada automaticamente ao converter a oportunidade.","sugestao":"Integrar CRM e SAP para que a ordem seja criada automaticamente ao converter a oportunidade.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Registrar pedidos de venda","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p1"},{"chave":"3-63cdbc66cdda","tipo":"doc","titulo":"Sugestão do Claude","etapas":[],"detalhe":"Gerar o e-mail de confirmação a partir da ordem gravada.","sugestao":"Gerar o e-mail de confirmação a partir da ordem gravada.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Registrar pedidos de venda","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p1"},{"chave":"3-00d822c97681","tipo":"doc","titulo":"Sugestão do Claude","etapas":[],"detalhe":"Publicar a previsão em um painel ligado ao CRM, dispensando a exportação diária e o envio da planilha.","sugestao":"Publicar a previsão em um painel ligado ao CRM, dispensando a exportação diária e o envio da planilha.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Atualizar a previsão de vendas","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p2"},{"chave":"3-7e27971d8065","tipo":"doc","titulo":"Sugestão do Claude","etapas":[],"detalhe":"Usar o próprio painel de metas do CRM na reunião, sem montar o gráfico no Excel e no PowerPoint.","sugestao":"Usar o próprio painel de metas do CRM na reunião, sem montar o gráfico no Excel e no PowerPoint.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Apresentar o resultado de metas","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":"#c3-p3"},{"chave":"3-2ea02760e018","tipo":"funcao","titulo":"Recomendação para a função (Claude)","etapas":[],"detalhe":"Integrar o CRM ao SAP para que a ordem de venda seja criada sem redigitar cliente, material e quantidade.","sugestao":"Integrar o CRM ao SAP para que a ordem de venda seja criada sem redigitar cliente, material e quantidade.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Função como um todo","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":null},{"chave":"3-347b6b12bf01","tipo":"funcao","titulo":"Recomendação para a função (Claude)","etapas":[],"detalhe":"Verificar a lentidão do CRM ao converter oportunidades em pedido, que às vezes passa de 7 minutos.","sugestao":"Verificar a lentidão do CRM ao converter oportunidades em pedido, que às vezes passa de 7 minutos.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Função como um todo","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":null},{"chave":"3-c68592d2e029","tipo":"funcao","titulo":"Recomendação para a função (Claude)","etapas":[],"detalhe":"Avaliar se a entrada de pedidos pode ir para uma função de apoio, liberando o executivo para vendas.","sugestao":"Avaliar se a entrada de pedidos pode ir para uma função de apoio, liberando o executivo para vendas.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Função como um todo","responsavel":"Bruno Lima","conta_id":3,"area":"Comercial","link":null}]},"2":{"usuario":"ana.souza@demo.com.br","gerado_em":"2026-11-04T11:28:46","periodo":{"inicio":"2026-10-21","fim":"2026-11-03","dias":10},"estatisticas":{"eventos":3802,"trocas_de_janela":1610,"tempo_ativo_s":272280,"tempo_ativo":"75h 38min","media_diaria":"7h 33min","tempo_em_processos_s":65736,"tempo_em_processos":"18h 15min","percentual_repetitivo":24.1,"tempo_por_app":[{"app":"Teams","segundos":63834,"texto":"17h 43min"},{"app":"Outlook","segundos":32662,"texto":"9h 04min"},{"app":"Portal de Notícias","segundos":26422,"texto":"7h 20min"},{"app":"SAP","segundos":25186,"texto":"6h 59min"},{"app":"WhatsApp Web","segundos":22507,"texto":"6h 15min"},{"app":"Excel","segundos":20818,"texto":"5h 46min"},{"app":"Google Drive","segundos":20059,"texto":"5h 34min"},{"app":"Portal do Colaborador","segundos":19850,"texto":"5h 30min"},{"app":"Explorador de Arquivos","segundos":13261,"texto":"3h 41min"},{"app":"Previsão do tempo","segundos":13191,"texto":"3h 39min"}],"tempo_por_dia":[["2026-10-21",27272],["2026-10-22",27352],["2026-10-23",27892],["2026-10-26",26045],["2026-10-27",27560],["2026-10-28",27594],["2026-10-29",27061],["2026-10-30",27788],["2026-11-02",27073],["2026-11-03",26643]]},"graficos":{"calor":[[3,5,0,0,0,5,1,0,0,0,0],[4,6,0,0,0,8,2,0,0,0,0],[3,4,3,0,0,8,2,0,0,0,0],[3,5,0,0,0,6,3,0,0,0,0],[4,6,0,0,0,11,1,2,0,0,0]],"calor_horas":[8,9,10,11,12,13,14,15,16,17,18],"execucoes_por_dia":[{"dia":"2026-10-21","por_processo":{"p1":9,"p2":1}},{"dia":"2026-10-22","por_processo":{"p1":8,"p2":1}},{"dia":"2026-10-23","por_processo":{"p1":9,"p2":1,"p3":1}},{"dia":"2026-10-26","por_processo":{"p1":6,"p2":1}},{"dia":"2026-10-27","por_processo":{"p1":8,"p2":1}},{"dia":"2026-10-28","por_processo":{"p1":9,"p2":1}},{"dia":"2026-10-29","por_processo":{"p1":7,"p2":1}},{"dia":"2026-10-30","por_processo":{"p1":11,"p2":1,"p3":1}},{"dia":"2026-11-02","por_processo":{"p1":6,"p2":1}},{"dia":"2026-11-03","por_processo":{"p1":10,"p2":1}}]},"candidatos":[{"id":"n1","aplicativos":["Explorador de Arquivos","Excel","Outlook"],"ocorrencias":3,"tipo_frequencia":"recorrente","frequencia":"Recorrente — 3 vezes em 3 dos 10 dias","horario_tipico":"10:03","janela_horario":"10:03–10:04","duracao_media_s":665,"duracao_media":"11min 05s","tempo_total_s":1995,"tempo_total":"33min 15s","execucoes_semana":1.5,"horas_semana":0.28,"passos":[{"app":"Explorador de Arquivos","navegador":null,"site":null,"tela":"Comprovantes #","duracao_media_s":101,"acoes":[{"t":"Clicar em item da lista “Comprovante_#.pdf”","f":1.0},{"t":"Usar o atalho Ctrl+C (Copiar)","f":1.0}],"mediana_s":79,"p25_s":79,"p75_s":112,"p90_s":131,"min_s":79,"max_s":144},{"app":"Excel","navegador":null,"site":null,"tela":"Auditoria_Respostas.xlsx","duracao_media_s":321,"acoes":[{"t":"Preencher o campo “Célula”","f":1.0},{"t":"Usar o atalho Ctrl+S (Salvar)","f":1.0}],"mediana_s":284,"p25_s":254,"p75_s":370,"p90_s":422,"min_s":224,"max_s":456},{"app":"Outlook","navegador":null,"site":null,"tela":"Auditoria - documentos solicitados - Mensagem (HTML)","duracao_media_s":243,"acoes":[{"t":"Clicar em botão “Anexar arquivo”","f":1.0},{"t":"Preencher o campo “Corpo da mensagem”","f":1.0},{"t":"Clicar em botão “Enviar”","f":1.0}],"mediana_s":252,"p25_s":206,"p75_s":284,"p90_s":304,"min_s":161,"max_s":317}],"execucoes":[[1793365431,851,[144,456,252]],[1793624592,619,[79,224,317]],[1793711099,525,[79,284,161]]],"interrupcoes":{},"assinatura":"93c65a972aea","primeira_vez":"2026-10-30","recente":true,"nome_sugerido":"Responder pedidos da auditoria","primeira_vez_txt":"30/10/2026","processo_fixo":{"id":"p4","aplicativos":["Explorador de Arquivos","Excel","Outlook"],"ocorrencias":3,"tipo_frequencia":"recorrente","frequencia":"Recorrente — 3 vezes em 3 dos 10 dias","horario_tipico":"10:03","janela_horario":"10:03–10:04","duracao_media_s":665,"duracao_media":"11min 05s","tempo_total_s":1995,"tempo_total":"33min 15s","execucoes_semana":1.5,"horas_semana":0.28,"passos":[{"app":"Explorador de Arquivos","navegador":null,"site":null,"tela":"Comprovantes #","duracao_media_s":101,"acoes":[{"t":"Clicar em item da lista “Comprovante_#.pdf”","f":1.0},{"t":"Usar o atalho Ctrl+C (Copiar)","f":1.0}],"mediana_s":79,"p25_s":79,"p75_s":112,"p90_s":131,"min_s":79,"max_s":144},{"app":"Excel","navegador":null,"site":null,"tela":"Auditoria_Respostas.xlsx","duracao_media_s":321,"acoes":[{"t":"Preencher o campo “Célula”","f":1.0},{"t":"Usar o atalho Ctrl+S (Salvar)","f":1.0}],"mediana_s":284,"p25_s":254,"p75_s":370,"p90_s":422,"min_s":224,"max_s":456},{"app":"Outlook","navegador":null,"site":null,"tela":"Auditoria - documentos solicitados - Mensagem (HTML)","duracao_media_s":243,"acoes":[{"t":"Clicar em botão “Anexar arquivo”","f":1.0},{"t":"Preencher o campo “Corpo da mensagem”","f":1.0},{"t":"Clicar em botão “Enviar”","f":1.0}],"mediana_s":252,"p25_s":206,"p75_s":284,"p90_s":304,"min_s":161,"max_s":317}],"execucoes":[[1793365431,851,[144,456,252]],[1793624592,619,[79,224,317]],[1793711099,525,[79,284,161]]],"interrupcoes":{},"assinatura":"93c65a972aea","fixado_pelo_gestor":true,"gargalos":[{"tipo":"etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapa":1,"severidade":"media","detalhe":"A etapa 2 (Excel) leva em média 5min 21s, 48% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","horas_semana":0.13,"metrica":"por semana nesta etapa"}],"documento":{"nome":"Responder pedidos da auditoria","objetivo":"Separar os comprovantes pedidos pela auditoria, registrar a resposta e enviar os documentos.","gatilho":"Executado conforme a demanda (Recorrente — 3 vezes em 3 dos 10 dias).","responsavel":"Analista de Contas a Pagar","passos":[{"titulo":"Abrir a pasta “Comprovantes #”","descricao":"No Explorador de Arquivos, abra “Comprovantes #”.","sistema":"Explorador de Arquivos","subpassos":["Selecione o item “Comprovante_#.pdf”","Copie a informação (Ctrl+C)"],"tempo":"cerca de 1 min 19 s"},{"titulo":"Atualizar a planilha “Auditoria_Respostas.xlsx”","descricao":"No Excel, abra “Auditoria_Respostas.xlsx”.","sistema":"Excel","subpassos":["Preencha a linha da planilha com os dados","Salve o arquivo (Ctrl+S)"],"tempo":"cerca de 4 min 44 s"},{"titulo":"Enviar o e-mail “Auditoria - documentos solicitados”","descricao":"No Outlook, abra “Auditoria - documentos solicitados - Mensagem (HTML)”.","sistema":"Outlook","subpassos":["Clique no botão “Anexar arquivo”","Escreva o texto da mensagem","Clique no botão “Enviar”"],"tempo":"cerca de 4 min 12 s"}],"entradas":["Informações disponíveis no Explorador de Arquivos ao iniciar"],"saidas":["Arquivo “Auditoria_Respostas.xlsx” atualizado","E-mail enviado aos destinatários"],"pontos_de_atencao":["Etapa 2: A etapa 2 (Excel) leva em média 5min 21s, 48% do tempo de cada execução."],"oportunidades_de_automacao":[],"gerado_por":"modelo automático"}},"melhorias_fixo":[{"chave":"2-31bc14eda76d","tipo":"email_manual","titulo":"E-mail escrito à mão a cada execução","etapas":[3],"detalhe":"Na etapa 3, destinatários e texto do e-mail são digitados de novo toda vez (cerca de 2 por semana).","sugestao":"Criar um modelo de e-mail (Etapas Rápidas ou Modelos do Outlook) com destinatários e texto prontos, ou gerar o e-mail automaticamente a partir do sistema.","origem":"padrao","esforco":"baixo","esforco_txt":"Esforço baixo","horas_semana":0.1,"prioridade":"rapido","prioridade_txt":"Ganho rápido","processo":"Responder pedidos da auditoria","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p4"},{"chave":"2-ef49cb0f1c57","tipo":"gargalo_etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapas":[2],"detalhe":"A etapa 2 (Excel) leva em média 5min 21s, 48% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","origem":"gargalo","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.13,"prioridade":"avaliar","prioridade_txt":"Avaliar","severidade":"media","processo":"Responder pedidos da auditoria","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p4"}]}],"rotina":[{"id":"p2","horario":"08:36","frequencia":"Diária — 1 vez por dia","tipo_frequencia":"diaria"},{"id":"p1","horario":"13:11","frequencia":"Diária — cerca de 8 vezes por dia","tipo_frequencia":"diaria"},{"id":"p3","horario":"15:01","frequencia":"Semanal — às sexta-feiras","tipo_frequencia":"semanal"}],"processos":[{"id":"p1","aplicativos":["Outlook","Adobe Acrobat","SAP","Excel"],"ocorrencias":83,"tipo_frequencia":"diaria","frequencia":"Diária — cerca de 8 vezes por dia","horario_tipico":"13:11","janela_horario":"08:52–14:29","duracao_media_s":616,"duracao_media":"10min 16s","tempo_total_s":51159,"tempo_total":"14h 12min","execucoes_semana":41.5,"horas_semana":7.11,"passos":[{"app":"Outlook","navegador":null,"site":null,"tela":"Caixa de Entrada - [email]","duracao_media_s":97,"acoes":[{"t":"Clicar em item da lista (varia a cada execução — ex.: “NF # - Café & Cia”)","f":1.0},{"t":"Clicar em botão “Salvar todos os anexos”","f":1.0}],"mediana_s":95,"p25_s":75,"p75_s":112,"p90_s":131,"min_s":49,"max_s":338},{"app":"Adobe Acrobat","navegador":null,"site":null,"tela":"NF_#.pdf","duracao_media_s":129,"acoes":[{"t":"Usar o atalho Ctrl+F (Localizar)","f":1.0},{"t":"Preencher o campo “Localizar”","f":1.0},{"t":"Usar o atalho Ctrl+C (Copiar)","f":1.0}],"mediana_s":126,"p25_s":103,"p75_s":155,"p90_s":178,"min_s":53,"max_s":224},{"app":"SAP","navegador":null,"site":null,"tela":"Registrar fatura recebida: Empresa #","duracao_media_s":264,"acoes":[{"t":"Preencher o campo “Data da fatura”","f":1.0},{"t":"Pressionar Tab","f":1.0},{"t":"Preencher o campo “Referência”","f":1.0},{"t":"Preencher o campo “Montante”","f":1.0},{"t":"Clicar em lista “Código do imposto”","f":0.77},{"t":"Clicar em botão “Simular”","f":1.0},{"t":"Clicar em botão “Gravar”","f":1.0}],"mediana_s":196,"p25_s":166,"p75_s":238,"p90_s":583,"min_s":110,"max_s":740},{"app":"Excel","navegador":null,"site":null,"tela":"Controle_NFs_#.xlsx","duracao_media_s":126,"acoes":[{"t":"Preencher o campo “Célula”","f":1.0},{"t":"Usar o atalho Ctrl+S (Salvar)","f":1.0}],"mediana_s":128,"p25_s":99,"p75_s":152,"p90_s":172,"min_s":53,"max_s":200}],"execucoes":[[1792586711,606,[89,111,242,164]],[1792587527,543,[75,154,207,107]],[1792588070,344,[62,62,130,91]],[1792588414,678,[149,161,204,163]],[1792589092,420,[87,94,160,79]],[1792599018,484,[94,116,119,155]],[1792599502,653,[102,174,225,152]],[1792600156,518,[90,145,170,113]],[1792600890,597,[77,208,168,145]],[1792670206,672,[90,126,379,77]],[1792671086,534,[75,126,176,157]],[1792671620,463,[96,111,156,99]],[1792672447,458,[89,84,173,112]],[1792672905,444,[100,142,123,79]],[1792685348,527,[72,158,196,101]],[1792686120,925,[79,89,648,109]],[1792687045,512,[78,135,202,97]],[1792756657,439,[104,94,170,71]],[1792757378,591,[97,159,169,165]],[1792757969,643,[55,127,322,138]],[1792771212,471,[115,105,176,76]],[1792771904,892,[338,150,258,146]],[1792773792,478,[113,91,133,141]],[1792774270,484,[87,117,185,96]],[1792774755,412,[51,104,110,147]],[1792775167,648,[111,178,230,128]],[1793016518,503,[71,103,188,140]],[1793017021,635,[97,188,183,166]],[1793017656,607,[93,126,228,160]],[1793032007,813,[50,89,557,117]],[1793033688,862,[87,95,610,70]],[1793034550,453,[95,65,186,107]],[1793101972,441,[101,112,130,98]],[1793102413,467,[101,63,170,133]],[1793103516,973,[134,114,540,186]],[1793116869,981,[132,97,622,130]],[1793117849,555,[107,100,195,153]],[1793119161,532,[120,109,164,138]],[1793119693,532,[80,150,166,136]],[1793120658,509,[78,132,133,165]],[1793188548,472,[69,111,190,101]],[1793189456,580,[113,107,223,137]],[1793190826,521,[120,78,147,177]],[1793204094,438,[50,94,148,146]],[1793204532,639,[99,179,192,170]],[1793205171,508,[115,102,179,113]],[1793205996,557,[115,169,196,77]],[1793206880,1093,[132,119,730,112]],[1793207972,699,[102,188,236,173]],[1793276715,740,[153,200,232,154]],[1793290808,847,[128,130,485,104]],[1793291655,539,[112,102,237,88]],[1793292194,628,[141,156,240,91]],[1793293301,1221,[102,224,698,198]],[1793294522,461,[58,134,163,107]],[1793294984,710,[67,148,386,109]],[1793361520,589,[212,124,158,95]],[1793362108,704,[60,94,448,102]],[1793362886,1010,[95,160,589,165]],[1793363896,553,[58,113,329,53]],[1793364573,614,[70,151,212,181]],[1793376375,479,[51,154,185,89]],[1793376854,561,[91,100,181,188]],[1793377415,466,[70,147,134,116]],[1793377881,695,[121,207,229,138]],[1793378787,480,[63,117,164,136]],[1793379266,790,[51,140,538,61]],[1793620512,373,[81,65,149,79]],[1793620885,1057,[102,138,740,76]],[1793621942,535,[118,168,162,87]],[1793635995,418,[69,53,175,122]],[1793637577,589,[129,121,216,123]],[1793638426,672,[111,156,221,184]],[1793707077,451,[88,114,138,112]],[1793707529,467,[76,116,163,113]],[1793708550,623,[101,112,209,200]],[1793709716,530,[97,92,205,136]],[1793710416,684,[140,179,236,129]],[1793722362,561,[88,158,216,98]],[1793722923,1093,[98,165,696,134]],[1793724016,1050,[49,152,670,179]],[1793725067,518,[63,145,166,144]],[1793725585,643,[106,188,202,148]]],"interrupcoes":{"1":10},"assinatura":"2ba4b3ea0ff9","fixado_pelo_gestor":false,"gargalos":[{"tipo":"manual","titulo":"Digitação manual repetitiva","etapa":2,"severidade":"alta","detalhe":"A etapa 3 (SAP) tem 3 campos preenchidos à mão em toda execução, cerca de 42 vezes por semana.","sugestao":"Dados digitados de novo a cada execução são candidatos a importação automática, integração entre sistemas ou um robô (RPA).","horas_semana":3.04,"metrica":"por semana nesta etapa"},{"tipo":"etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapa":2,"severidade":"media","detalhe":"A etapa 3 (SAP) leva em média 4min 24s, 43% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","horas_semana":3.04,"metrica":"por semana nesta etapa"},{"tipo":"instavel","titulo":"Tempo instável","etapa":2,"severidade":"media","detalhe":"Na etapa 3 (SAP) o normal é 3min 16s, mas 1 em cada 10 execuções passa de 9min 43s (até 12min 20s).","sugestao":"Picos assim costumam vir de lentidão do sistema, casos fora do padrão ou dependência de outra pessoa. Vale registrar quando acontece para achar a causa.","horas_semana":0.98,"metrica":"por semana acima do tempo normal"},{"tipo":"interrupcoes","titulo":"Interrupções frequentes","etapa":1,"severidade":"media","detalhe":"Em 11% das vezes (10 execuções) o colaborador saiu do processo no meio, principalmente depois da etapa 2 (Adobe Acrobat).","sugestao":"Interrupções aumentam o tempo e o risco de erro. Veja se falta alguma informação nesse ponto ou se o processo pode ser feito em blocos, sem pausas.","horas_semana":null,"metrica":null}],"documento":{"nome":"Lançar notas fiscais de fornecedores","objetivo":"Registrar no SAP cada nota fiscal recebida por e-mail e manter a planilha de controle de NFs em dia.","gatilho":"Chegada de um e-mail de fornecedor com a nota fiscal em anexo. Acontece cerca de 8 vezes por dia, de manhã e à tarde.","responsavel":"Analista de Contas a Pagar","passos":[{"titulo":"Salvar a nota recebida por e-mail","sistema":"Outlook","tempo":"cerca de 1 min 40 s","descricao":"As notas chegam na caixa de entrada com o assunto “NF número - fornecedor”.","subpassos":["Abra o e-mail da nota fiscal na Caixa de Entrada","Clique em “Salvar todos os anexos” para guardar o PDF da nota"]},{"titulo":"Conferir os dados no PDF da nota","sistema":"Adobe Acrobat","tempo":"cerca de 2 min","descricao":"Abra o PDF salvo e localize as informações que serão lançadas.","subpassos":["Abra o arquivo NF_número.pdf","Use Ctrl+F para buscar o dado necessário (provavelmente número, data e valor da nota)","Copie a informação com Ctrl+C"]},{"titulo":"Registrar a fatura no SAP","sistema":"SAP","tempo":"cerca de 3 min 20 s (pode passar de 8 min quando o sistema está lento)","descricao":"Na transação “Registrar fatura recebida” da empresa, lance os dados da nota.","subpassos":["Preencha a Data da fatura e passe para o próximo campo com Tab","Preencha a Referência (número da nota)","Preencha o Montante (valor da nota)","Escolha o Código do imposto na lista (necessário em quase todas as notas)","Clique em “Simular” e confira o resultado antes de gravar","Clique em “Gravar” para registrar a fatura"]},{"titulo":"Atualizar a planilha de controle","sistema":"Excel","tempo":"cerca de 2 min","descricao":"Registre a nota lançada na planilha Controle_NFs do ano.","subpassos":["Abra a planilha Controle_NFs_2026.xlsx","Preencha uma nova linha com os dados da nota lançada","Salve a planilha (Ctrl+S)"]}],"entradas":["E-mail do fornecedor com o PDF da nota fiscal"],"saidas":["Fatura registrada no SAP","Linha nova na planilha Controle_NFs_2026.xlsx"],"pontos_de_atencao":["O botão “Simular” às vezes demora a responder; aguarde o resultado antes de clicar em “Gravar” para não duplicar o lançamento.","Confira o código do imposto: é o único campo de escolha e afeta o valor registrado.","Os mesmos dados (data, número e valor) são digitados duas vezes, no SAP e na planilha; confira se coincidem."],"oportunidades_de_automacao":["Importar os dados da nota direto do XML ou do PDF para o SAP, eliminando a digitação de 3 campos em cerca de 40 notas por semana.","Gerar a linha da planilha de controle a partir do lançamento no SAP, em vez de digitar de novo."],"analise_gargalos":"O gargalo está na etapa do SAP: ela concentra 41% do tempo, depende de digitação manual e tem picos de lentidão. Como a tarefa se repete cerca de 40 vezes por semana, automatizar a entrada dos dados da nota é a melhoria de maior retorno da área.","gerado_por":"Claude"}},{"id":"p2","aplicativos":["Banco Empresas","Explorador de Arquivos","Excel","Outlook"],"ocorrencias":10,"tipo_frequencia":"diaria","frequencia":"Diária — 1 vez por dia","horario_tipico":"08:36","janela_horario":"08:31–08:45","duracao_media_s":1151,"duracao_media":"19min 11s","tempo_total_s":11513,"tempo_total":"3h 11min","execucoes_semana":5.0,"horas_semana":1.6,"passos":[{"app":"Banco Empresas","navegador":"Chrome","site":"netempresas.bancoexemplo.com.br","tela":"Extrato","duracao_media_s":161,"acoes":[{"t":"Clicar em link “Extrato por período”","f":1.0},{"t":"Clicar em botão “Exportar OFX”","f":1.0}],"mediana_s":162,"p25_s":132,"p75_s":203,"p90_s":211,"min_s":96,"max_s":213},{"app":"Explorador de Arquivos","navegador":null,"site":null,"tela":"Downloads","duracao_media_s":47,"acoes":[{"t":"Usar o atalho Ctrl+X (Recortar)","f":1.0}],"mediana_s":47,"p25_s":41,"p75_s":53,"p90_s":57,"min_s":26,"max_s":71},{"app":"Explorador de Arquivos","navegador":null,"site":null,"tela":"Conciliação Bancária","duracao_media_s":35,"acoes":[{"t":"Usar o atalho Ctrl+V (Colar)","f":1.0}],"mediana_s":33,"p25_s":28,"p75_s":41,"p90_s":49,"min_s":18,"max_s":50},{"app":"Excel","navegador":null,"site":null,"tela":"Conciliacao_Bancaria.xlsm","duracao_media_s":688,"acoes":[{"t":"Clicar em botão “Importar extrato”","f":1.0},{"t":"Clicar em botão “Conciliar”","f":1.0},{"t":"Preencher o campo “Observações”","f":1.0},{"t":"Usar o atalho Ctrl+S (Salvar)","f":1.0}],"mediana_s":629,"p25_s":589,"p75_s":796,"p90_s":908,"min_s":483,"max_s":933},{"app":"Outlook","navegador":null,"site":null,"tela":"Conciliação bancária <data> - Mensagem (HTML)","duracao_media_s":221,"acoes":[{"t":"Preencher o campo “Para”","f":1.0},{"t":"Preencher o campo “Corpo da mensagem”","f":1.0},{"t":"Clicar em botão “Enviar”","f":1.0}],"mediana_s":210,"p25_s":186,"p75_s":263,"p90_s":269,"min_s":149,"max_s":301}],"execucoes":[[1792582388,1358,[207,26,25,933,168]],[1792669028,904,[131,47,28,483,215]],[1792755284,1097,[170,54,50,617,206]],[1793015152,1223,[211,56,49,606,301]],[1793101021,865,[103,33,18,530,181]],[1793187091,1412,[153,46,41,906,266]],[1793273771,952,[96,39,32,583,202]],[1793359919,1325,[189,71,29,781,256]],[1793619118,1372,[213,53,41,801,265]],[1793706049,1004,[134,46,34,641,149]]],"interrupcoes":{},"assinatura":"d8956759dfe2","fixado_pelo_gestor":false,"gargalos":[{"tipo":"etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapa":3,"severidade":"alta","detalhe":"A etapa 4 (Excel) leva em média 11min 28s, 60% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","horas_semana":0.96,"metrica":"por semana nesta etapa"}],"documento":{"nome":"Fazer a conciliação bancária","objetivo":"Conferir os lançamentos do extrato bancário com os registros da empresa e informar o resultado do dia.","gatilho":"Primeira tarefa do dia, por volta das 8h40.","responsavel":"Analista de Contas a Pagar","passos":[{"titulo":"Exportar o extrato no portal do banco","sistema":"Banco Empresas","tempo":"cerca de 2 min 20 s","descricao":"Acesse o portal Banco Empresas (netempresas.bancoexemplo.com.br), na área de extrato.","subpassos":["Clique em “Extrato por período” e selecione o período (provavelmente o dia anterior)","Clique em “Exportar OFX” para baixar o arquivo"]},{"titulo":"Mover o arquivo para a pasta da conciliação","sistema":"Explorador de Arquivos","tempo":"cerca de 1 min 30 s","descricao":"O arquivo baixado fica em Downloads e precisa ir para a pasta usada pela planilha.","subpassos":["Na pasta Downloads, recorte o arquivo OFX (Ctrl+X)","Abra a pasta “Conciliação Bancária” e cole o arquivo (Ctrl+V)"]},{"titulo":"Conciliar na planilha","sistema":"Excel","tempo":"cerca de 11 min","descricao":"A planilha Conciliacao_Bancaria.xlsm tem botões (macros) que fazem a importação e o cruzamento.","subpassos":["Abra a planilha Conciliacao_Bancaria.xlsm","Clique em “Importar extrato”","Clique em “Conciliar” e aguarde o cruzamento dos lançamentos","Analise as divergências e registre-as no campo Observações","Salve a planilha (Ctrl+S)"]},{"titulo":"Enviar o resultado por e-mail","sistema":"Outlook","tempo":"cerca de 3 min 20 s","descricao":"Crie um e-mail com o assunto “Conciliação bancária DD/MM”.","subpassos":["Informe os destinatários no campo “Para”","Escreva o resumo da conciliação e as divergências encontradas","Clique em “Enviar”"]}],"entradas":["Extrato do banco no formato OFX"],"saidas":["Planilha de conciliação atualizada","E-mail com o resultado da conciliação do dia"],"pontos_de_atencao":["A etapa no Excel ocupa 62% do tempo do processo; a análise das divergências é a parte que exige mais atenção.","Confira se o arquivo OFX é do período correto antes de importar."],"oportunidades_de_automacao":["Baixar o extrato automaticamente (integração bancária ou API do banco) e salvá-lo direto na pasta da conciliação.","Gerar o e-mail de resultado a partir da própria planilha."],"analise_gargalos":"O tempo se concentra na planilha de conciliação, que já usa macros. A melhoria mais simples é eliminar os passos manuais antes dela (download e cópia do arquivo), que hoje somam cerca de 4 minutos por dia.","gerado_por":"Claude"}},{"id":"p3","aplicativos":["SAP","Excel","PowerPoint","Outlook"],"ocorrencias":2,"tipo_frequencia":"semanal","frequencia":"Semanal — às sexta-feiras","horario_tipico":"15:01","janela_horario":"15:00–15:01","duracao_media_s":1532,"duracao_media":"25min 32s","tempo_total_s":3064,"tempo_total":"51min 04s","execucoes_semana":1.0,"horas_semana":0.43,"passos":[{"app":"SAP","navegador":null,"site":null,"tela":"Relatório de despesas por centro de custo","duracao_media_s":284,"acoes":[{"t":"Preencher o campo “Período”","f":1.0},{"t":"Clicar em botão “Executar”","f":1.0},{"t":"Clicar em botão “Exportar para planilha”","f":1.0}],"mediana_s":284,"p25_s":277,"p75_s":291,"p90_s":295,"min_s":270,"max_s":298},{"app":"Excel","navegador":null,"site":null,"tela":"Despesas_Semana_#.xlsx","duracao_media_s":626,"acoes":[{"t":"Clicar em menu “Atualizar tudo”","f":1.0},{"t":"Clicar em botão “Tabela Dinâmica”","f":1.0},{"t":"Usar o atalho Ctrl+C (Copiar)","f":1.0}],"mediana_s":626,"p25_s":585,"p75_s":668,"p90_s":693,"min_s":543,"max_s":709},{"app":"PowerPoint","navegador":null,"site":null,"tela":"Fechamento_Semanal.pptx","duracao_media_s":395,"acoes":[{"t":"Usar o atalho Ctrl+V (Colar)","f":1.0},{"t":"Preencher o campo “Título”","f":1.0},{"t":"Usar o atalho Ctrl+S (Salvar)","f":1.0}],"mediana_s":395,"p25_s":377,"p75_s":412,"p90_s":423,"min_s":359,"max_s":430},{"app":"Outlook","navegador":null,"site":null,"tela":"Relatório semanal de despesas - Mensagem (HTML)","duracao_media_s":227,"acoes":[{"t":"Preencher o campo “Para”","f":1.0},{"t":"Clicar em botão “Anexar arquivo”","f":1.0},{"t":"Preencher o campo “Corpo da mensagem”","f":1.0},{"t":"Clicar em botão “Enviar”","f":1.0}],"mediana_s":227,"p25_s":216,"p75_s":238,"p90_s":244,"min_s":205,"max_s":248}],"execucoes":[[1792778441,1615,[270,709,430,205]],[1793383264,1449,[298,543,359,248]]],"interrupcoes":{},"assinatura":"ce524f0b62f9","fixado_pelo_gestor":false,"gargalos":[{"tipo":"etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapa":1,"severidade":"media","detalhe":"A etapa 2 (Excel) leva em média 10min 26s, 41% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","horas_semana":0.17,"metrica":"por semana nesta etapa"}],"documento":{"nome":"Gerar o relatório semanal de despesas","objetivo":"Consolidar as despesas da semana por centro de custo e enviar a apresentação de fechamento aos responsáveis.","gatilho":"Toda sexta-feira, por volta das 15h.","responsavel":"Analista de Contas a Pagar","passos":[{"titulo":"Extrair as despesas do SAP","sistema":"SAP","tempo":"cerca de 4 min 45 s","descricao":"Use o relatório de despesas por centro de custo.","subpassos":["Preencha o Período com as datas da semana","Clique em “Executar”","Clique em “Exportar para planilha”"]},{"titulo":"Montar a análise na planilha","sistema":"Excel","tempo":"cerca de 12 min","descricao":"Abra a planilha da semana (Despesas_Semana_nº).","subpassos":["Clique em “Atualizar tudo” para carregar os dados exportados","Monte ou atualize a tabela dinâmica","Copie a tabela (Ctrl+C)"]},{"titulo":"Atualizar a apresentação de fechamento","sistema":"PowerPoint","tempo":"cerca de 6 min","descricao":"Use a apresentação Fechamento_Semanal.pptx.","subpassos":["Cole a tabela no slide (Ctrl+V)","Atualize o título com a semana de referência","Salve a apresentação (Ctrl+S)"]},{"titulo":"Enviar o relatório","sistema":"Outlook","tempo":"cerca de 6 min","descricao":"Crie o e-mail “Relatório semanal de despesas”.","subpassos":["Informe os destinatários","Anexe a apresentação de fechamento","Escreva o resumo da semana","Clique em “Enviar”"]}],"entradas":["Despesas da semana no SAP"],"saidas":["Apresentação Fechamento_Semanal.pptx atualizada","E-mail com o relatório para os responsáveis"],"pontos_de_atencao":["Confira se o período informado no SAP cobre exatamente a semana (segunda a sexta)."],"oportunidades_de_automacao":["Ligar a planilha diretamente ao SAP ou a uma ferramenta de BI, para o relatório se atualizar sem exportação manual."],"analise_gargalos":"A etapa da planilha leva 42% do tempo. Com uma conexão direta aos dados, o processo semanal de cerca de 29 minutos poderia cair para poucos minutos de revisão.","gerado_por":"Claude"}}],"descricao_funcao":{"cargo_provavel":"Analista de Contas a Pagar","resumo":"Responsável pela entrada das notas fiscais de fornecedores no SAP, pela conciliação bancária diária e pelo relatório semanal de despesas. O trabalho é muito concentrado em lançamentos: são cerca de 8 notas por dia, cada uma passando por e-mail, PDF, SAP e planilha de controle. O que foi observado bate com a função cadastrada; a maior parte do tempo repetitivo está na digitação de dados da nota no SAP.","responsabilidades":["Lançar no SAP as notas fiscais recebidas por e-mail e manter a planilha de controle de NFs","Conciliar diariamente o extrato bancário e comunicar o resultado por e-mail","Gerar e enviar toda sexta-feira o relatório de despesas por centro de custo"],"sistemas_utilizados":["SAP","Excel","Outlook","Adobe Acrobat","Banco Empresas (portal do banco)","PowerPoint"],"competencias":["Rotinas de contas a pagar e fiscais","SAP (módulo financeiro)","Excel com macros e tabelas dinâmicas","Atenção a detalhes na conferência de valores"],"recomendacoes":["Avaliar a leitura automática das notas (XML ou OCR do PDF) para preencher data, referência e montante no SAP sem digitação.","Investigar a lentidão ocasional do SAP na tela de registro de fatura, que faz algumas notas levarem mais de 8 minutos nessa etapa.","Agendar a exportação do extrato bancário para que a conciliação comece já com o arquivo na pasta."],"gerado_por":"Claude"},"melhorias":[{"chave":"2-d25809775c72","tipo":"redigitacao","titulo":"Dados digitados em 2 sistemas no mesmo processo","etapas":[3,4],"detalhe":"Há preenchimento manual de campos em Excel, SAP; provavelmente parte das informações é a mesma, digitada mais de uma vez.","sugestao":"Definir um sistema como origem dos dados e alimentar os outros a partir dele (integração ou importação), eliminando a redigitação e o risco de divergência.","origem":"padrao","esforco":"alto","esforco_txt":"Esforço alto","horas_semana":4.5,"prioridade":"alto","prioridade_txt":"Alto impacto","processo":"Lançar notas fiscais de fornecedores","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p1"},{"chave":"2-86dbdb65f634","tipo":"gargalo_manual","titulo":"Digitação manual repetitiva","etapas":[3],"detalhe":"A etapa 3 (SAP) tem 3 campos preenchidos à mão em toda execução, cerca de 42 vezes por semana.","sugestao":"Dados digitados de novo a cada execução são candidatos a importação automática, integração entre sistemas ou um robô (RPA).","origem":"gargalo","esforco":"alto","esforco_txt":"Esforço alto","horas_semana":3.04,"prioridade":"alto","prioridade_txt":"Alto impacto","severidade":"alta","processo":"Lançar notas fiscais de fornecedores","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p1"},{"chave":"2-938d319edf71","tipo":"gargalo_etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapas":[3],"detalhe":"A etapa 3 (SAP) leva em média 4min 24s, 43% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","origem":"gargalo","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":3.04,"prioridade":"alto","prioridade_txt":"Alto impacto","severidade":"media","processo":"Lançar notas fiscais de fornecedores","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p1"},{"chave":"2-fd5fe1adc8e4","tipo":"exportar_importar","titulo":"Exportação manual do Banco Empresas para o Excel","etapas":[1,2,3,4],"detalhe":"Os dados saem do Banco Empresas por exportação (etapa 1) e são carregados à mão no Excel (etapa 4).","sugestao":"Agendar a exportação ou conectar o Excel direto à fonte (conector, API ou ferramenta de BI).","origem":"padrao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":1.29,"prioridade":"alto","prioridade_txt":"Alto impacto","processo":"Fazer a conciliação bancária","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p2"},{"chave":"2-63538f236b1e","tipo":"email_manual","titulo":"E-mail escrito à mão a cada execução","etapas":[5],"detalhe":"Na etapa 5, destinatários e texto do e-mail são digitados de novo toda vez (cerca de 5 por semana).","sugestao":"Criar um modelo de e-mail (Etapas Rápidas ou Modelos do Outlook) com destinatários e texto prontos, ou gerar o e-mail automaticamente a partir do sistema.","origem":"padrao","esforco":"baixo","esforco_txt":"Esforço baixo","horas_semana":0.31,"prioridade":"rapido","prioridade_txt":"Ganho rápido","processo":"Fazer a conciliação bancária","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p2"},{"chave":"2-dd946ff9b6ee","tipo":"mover_arquivo","titulo":"Arquivo movido à mão entre pastas","etapas":[2,3],"detalhe":"Na(s) etapa(s) 2, 3, um arquivo é recortado e colado em outra pasta a cada execução.","sugestao":"Configurar o navegador ou o sistema para salvar o arquivo direto na pasta de destino, ou usar uma regra simples de automação (Power Automate, script).","origem":"padrao","esforco":"baixo","esforco_txt":"Esforço baixo","horas_semana":0.11,"prioridade":"rapido","prioridade_txt":"Ganho rápido","processo":"Fazer a conciliação bancária","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p2"},{"chave":"2-6ecee6aa8a74","tipo":"email_manual","titulo":"E-mail escrito à mão a cada execução","etapas":[4],"detalhe":"Na etapa 4, destinatários e texto do e-mail são digitados de novo toda vez (cerca de 1 por semana).","sugestao":"Criar um modelo de e-mail (Etapas Rápidas ou Modelos do Outlook) com destinatários e texto prontos, ou gerar o e-mail automaticamente a partir do sistema.","origem":"padrao","esforco":"baixo","esforco_txt":"Esforço baixo","horas_semana":0.06,"prioridade":"rapido","prioridade_txt":"Ganho rápido","processo":"Gerar o relatório semanal de despesas","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p3"},{"chave":"2-137a6b8526af","tipo":"gargalo_interrupcoes","titulo":"Interrupções frequentes","etapas":[2],"detalhe":"Em 11% das vezes (10 execuções) o colaborador saiu do processo no meio, principalmente depois da etapa 2 (Adobe Acrobat).","sugestao":"Interrupções aumentam o tempo e o risco de erro. Veja se falta alguma informação nesse ponto ou se o processo pode ser feito em blocos, sem pausas.","origem":"gargalo","esforco":"baixo","esforco_txt":"Esforço baixo","horas_semana":null,"prioridade":"rapido","prioridade_txt":"Ganho rápido","severidade":"media","processo":"Lançar notas fiscais de fornecedores","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p1"},{"chave":"2-cc9df188b70b","tipo":"gargalo_instavel","titulo":"Tempo instável","etapas":[3],"detalhe":"Na etapa 3 (SAP) o normal é 3min 16s, mas 1 em cada 10 execuções passa de 9min 43s (até 12min 20s).","sugestao":"Picos assim costumam vir de lentidão do sistema, casos fora do padrão ou dependência de outra pessoa. Vale registrar quando acontece para achar a causa.","origem":"gargalo","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.98,"prioridade":"avaliar","prioridade_txt":"Avaliar","severidade":"media","processo":"Lançar notas fiscais de fornecedores","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p1"},{"chave":"2-774090d4db81","tipo":"gargalo_etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapas":[4],"detalhe":"A etapa 4 (Excel) leva em média 11min 28s, 60% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","origem":"gargalo","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.96,"prioridade":"avaliar","prioridade_txt":"Avaliar","severidade":"alta","processo":"Fazer a conciliação bancária","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p2"},{"chave":"2-515b14f3f980","tipo":"copiar_colar","titulo":"Informação copiada do Excel e colada no PowerPoint","etapas":[2,3],"detalhe":"Nas etapas 2 e 3, a informação passa do Excel para o PowerPoint com copiar e colar, cerca de 1 vez(es) por semana.","sugestao":"Ligar o PowerPoint direto aos dados do Excel (vínculo, importação ou integração), para que a informação se atualize sem copiar e colar.","origem":"padrao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.28,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Gerar o relatório semanal de despesas","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p3"},{"chave":"2-c1dc8b22333f","tipo":"exportar_importar","titulo":"Exportação manual do SAP para o Excel","etapas":[1,2],"detalhe":"Os dados saem do SAP por exportação (etapa 1) e são carregados à mão no Excel (etapa 2).","sugestao":"Agendar a exportação ou conectar o Excel direto à fonte (conector, API ou ferramenta de BI).","origem":"padrao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.25,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Gerar o relatório semanal de despesas","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p3"},{"chave":"2-2b22d7b51bc4","tipo":"gargalo_etapa_lenta","titulo":"Etapa concentra o tempo do processo","etapas":[2],"detalhe":"A etapa 2 (Excel) leva em média 10min 26s, 41% do tempo de cada execução.","sugestao":"Verifique se há espera pelo sistema, conferência manual ou informação faltando nessa etapa; é o ponto com mais retorno para simplificar ou automatizar.","origem":"gargalo","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":0.17,"prioridade":"avaliar","prioridade_txt":"Avaliar","severidade":"media","processo":"Gerar o relatório semanal de despesas","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p3"},{"chave":"2-47377939c470","tipo":"doc","titulo":"Sugestão do Claude","etapas":[],"detalhe":"Importar os dados da nota direto do XML ou do PDF para o SAP, eliminando a digitação de 3 campos em cerca de 40 notas por semana.","sugestao":"Importar os dados da nota direto do XML ou do PDF para o SAP, eliminando a digitação de 3 campos em cerca de 40 notas por semana.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Lançar notas fiscais de fornecedores","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p1"},{"chave":"2-18e429d79cea","tipo":"doc","titulo":"Sugestão do Claude","etapas":[],"detalhe":"Gerar a linha da planilha de controle a partir do lançamento no SAP, em vez de digitar de novo.","sugestao":"Gerar a linha da planilha de controle a partir do lançamento no SAP, em vez de digitar de novo.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Lançar notas fiscais de fornecedores","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p1"},{"chave":"2-4d4ff04208ed","tipo":"doc","titulo":"Sugestão do Claude","etapas":[],"detalhe":"Baixar o extrato automaticamente (integração bancária ou API do banco) e salvá-lo direto na pasta da conciliação.","sugestao":"Baixar o extrato automaticamente (integração bancária ou API do banco) e salvá-lo direto na pasta da conciliação.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Fazer a conciliação bancária","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p2"},{"chave":"2-e1f5b6e44227","tipo":"doc","titulo":"Sugestão do Claude","etapas":[],"detalhe":"Gerar o e-mail de resultado a partir da própria planilha.","sugestao":"Gerar o e-mail de resultado a partir da própria planilha.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Fazer a conciliação bancária","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p2"},{"chave":"2-7cde6d504ff0","tipo":"doc","titulo":"Sugestão do Claude","etapas":[],"detalhe":"Ligar a planilha diretamente ao SAP ou a uma ferramenta de BI, para o relatório se atualizar sem exportação manual.","sugestao":"Ligar a planilha diretamente ao SAP ou a uma ferramenta de BI, para o relatório se atualizar sem exportação manual.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Gerar o relatório semanal de despesas","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":"#c2-p3"},{"chave":"2-de1fb8e3e201","tipo":"funcao","titulo":"Recomendação para a função (Claude)","etapas":[],"detalhe":"Avaliar a leitura automática das notas (XML ou OCR do PDF) para preencher data, referência e montante no SAP sem digitação.","sugestao":"Avaliar a leitura automática das notas (XML ou OCR do PDF) para preencher data, referência e montante no SAP sem digitação.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Função como um todo","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":null},{"chave":"2-720687e35be4","tipo":"funcao","titulo":"Recomendação para a função (Claude)","etapas":[],"detalhe":"Investigar a lentidão ocasional do SAP na tela de registro de fatura, que faz algumas notas levarem mais de 8 minutos nessa etapa.","sugestao":"Investigar a lentidão ocasional do SAP na tela de registro de fatura, que faz algumas notas levarem mais de 8 minutos nessa etapa.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Função como um todo","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":null},{"chave":"2-2a67fdd10563","tipo":"funcao","titulo":"Recomendação para a função (Claude)","etapas":[],"detalhe":"Agendar a exportação do extrato bancário para que a conciliação comece já com o arquivo na pasta.","sugestao":"Agendar a exportação do extrato bancário para que a conciliação comece já com o arquivo na pasta.","origem":"documentacao","esforco":"medio","esforco_txt":"Esforço médio","horas_semana":null,"prioridade":"avaliar","prioridade_txt":"Avaliar","processo":"Função como um todo","responsavel":"Ana Souza","conta_id":2,"area":"Financeiro","link":null}]}},"status_opcoes":[["nova","Nova"],["analise","Em análise"],["andamento","Em andamento"],["concluida","Concluída"],["descartada","Descartada"]]};
+const SENHA_DEMO = "demo12345";
+let estado, eu = null, aviso = null;
+
+function carregar() {
+  estado = JSON.parse(JSON.stringify(BASE));
+  try { const s = JSON.parse(localStorage.getItem("taskminer-demo") || "null"); if (s && s.contas) { estado.contas = s.contas; estado.empresa = s.empresa; } } catch (e) {}
+  try { const id = sessionStorage.getItem("taskminer-eu"); if (id) eu = estado.contas.find(c => c.id == id && c.ativo) || null; } catch (e) {}
+}
+function salvar() { try { localStorage.setItem("taskminer-demo", JSON.stringify({ contas: estado.contas, empresa: estado.empresa })); } catch (e) {} }
+function lembrar() { try { eu ? sessionStorage.setItem("taskminer-eu", eu.id) : sessionStorage.removeItem("taskminer-eu"); } catch (e) {} }
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+const br = n => String(n).replace(".", ",");
+const data = d => `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
+const conta = id => estado.contas.find(c => c.id == id);
+let decisaoProc = {};
+try { decisaoProc = JSON.parse(localStorage.getItem("taskminer-processos-novos") || "{}") || {}; } catch (e) {}
+function salvarDecisoes() { try { localStorage.setItem("taskminer-processos-novos", JSON.stringify(decisaoProc)); } catch (e) {} }
+const _cacheRes = {};
+function res(c) {
+  const r = estado.resultados[c.id];
+  if (!r) return r;
+  const fixos = (r.candidatos || []).filter(k => decisaoProc[c.id + "-" + k.assinatura] === "fixo");
+  const chave = fixos.map(k => k.assinatura).join(",");
+  if (!fixos.length) return r;
+  if (_cacheRes[c.id] && _cacheRes[c.id].chave === chave) return _cacheRes[c.id].r;
+  const r2 = { ...r, processos: [...r.processos, ...fixos.map(k => k.processo_fixo)],
+    melhorias: [...r.melhorias, ...fixos.flatMap(k => k.melhorias_fixo)],
+    rotina: [...r.rotina, ...fixos.map(k => ({ id: k.processo_fixo.id, horario: k.processo_fixo.horario_tipico, frequencia: k.processo_fixo.frequencia, tipo_frequencia: k.processo_fixo.tipo_frequencia }))] };
+  _cacheRes[c.id] = { chave, r: r2 };
+  return r2;
+}
+const pendentes = c => { const r = estado.resultados[c.id]; return r ? (r.candidatos || []).filter(k => !decisaoProc[c.id + "-" + k.assinatura]) : []; };
+const ir = h => { location.hash = h; };
+const fluxo = apps => `<div class="fluxo">${apps.map((a, i) => (i ? '<span class="seta">→</span>' : "") + `<span class="app">${esc(a)}</span>`).join("")}</div>`;
+function status(c) {
+  if (res(c)) return { chave: "documentado", texto: "Documentado" };
+  return { chave: "aguardando", texto: "Aguardando coleta" };
+}
+function flash() { const a = aviso; aviso = null; return a ? `<div class="aviso ${a[0]}">${esc(a[1])}</div>` : ""; }
+
+// ------------------------------------------------------------------ cabeçalho
+function topo(rota) {
+  const el = document.getElementById("topo");
+  if (!eu) { el.innerHTML = `<a class="marca" href="#entrar">Task<span>Miner</span></a>`; return; }
+  const item = (h, t, ativo) => `<a href="#${h}" class="${ativo ? "ativo" : ""}">${t}</a>`;
+  el.innerHTML = `<a class="marca" href="#inicio">Task<span>Miner</span></a>
+    <span class="empresa-nome">${esc(estado.empresa.nome)}</span>
+    <nav class="menu">
+      ${eu.papel === "admin" ? item("processos", "Processos", rota === "processos" || rota === "manual" || rota.endsWith("-manual")) + item("empresa", "Resumo", rota === "empresa") + item("graficos", "Gráficos", rota === "graficos") + item("melhorias", "Melhorias e gargalos", rota === "melhorias" || rota === "gargalos" || /^c\d+-melhorias$/.test(rota)) + item("colaboradores", "Colaboradores", rota === "colaboradores" || rota.startsWith("editar")) : ""}
+      ${eu.papel !== "admin" ? item("c" + eu.id, "Minhas atividades", rota === "c" + eu.id || rota.startsWith("c" + eu.id + "-p") || rota === "c" + eu.id + "-manual") : ""}
+      ${eu.papel !== "admin" ? item("c" + eu.id + "-melhorias", "Melhorias", rota === "c" + eu.id + "-melhorias") + item("c" + eu.id + "-graficos", "Meus gráficos", rota === "c" + eu.id + "-graficos") : ""}
+      ${item("coleta", "Minha coleta", rota === "coleta")}
+    </nav>
+    <div class="quem"><span>${esc(eu.nome)}</span><button id="sair" type="button">Sair</button></div>`;
+  document.getElementById("sair").onclick = () => { eu = null; lembrar(); ir("entrar"); };
+}
+
+
+// ------------------------------------------------------------------ gráficos (SVG/HTML puro)
+const num = (v, d = 1) => br(Number(v).toFixed(d).replace(/\.0+$/, "").replace(/(\.\d*?)0+$/, "$1"));
+const hTexto = v => num(v, v >= 1 ? 1 : 2) + " h";
+const mmss = s => `${Math.floor(s / 60)}min ${String(Math.round(s % 60)).padStart(2, "0")}s`;
+const dataHora = ts => { const d = new Date(ts * 1000); return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); };
+
+function barrasH(linhas) {
+  const mx = Math.max(0, ...linhas.map(l => l.valor));
+  if (!linhas.length || !mx) return '<p class="lead">Sem dados.</p>';
+  return `<div class="gbarras">${linhas.map(l => `<div class="gbarra" title="${esc(l.rotulo)}: ${esc(l.texto)}">
+    <span class="rot"><span class="nome">${esc(l.rotulo)}</span>${l.sub ? `<span class="sub">${esc(l.sub)}</span>` : ""}</span>
+    <span class="trilho"><span class="enc ${l.destaque ? "destaque" : ""}" style="width:${Math.max(100 * l.valor / mx, .8).toFixed(1)}%"></span></span>
+    <span class="val">${esc(l.texto)}</span></div>`).join("")}</div>`;
+}
+
+function composicao(p) {
+  const total = p.passos.reduce((a, s) => a + s.duracao_media_s, 0) || 1;
+  const eg = new Set(p.gargalos.map(g => g.etapa));
+  return `<div class="comp"><div class="comp-barra" role="img" aria-label="Tempo médio por etapa">${p.passos.map((s, i) => `<span class="seg ${eg.has(i) ? "gargalo" : ""}" style="flex-grow:${s.duracao_media_s}" title="Etapa ${i + 1} · ${esc(s.app)}: ${s.duracao_media_s} s em média (${Math.round(100 * s.duracao_media_s / total)}%)">${s.duracao_media_s / total >= .12 ? `<span class="seg-txt">${i + 1}</span>` : ""}</span>`).join("")}</div>
+    <div class="comp-leg">${p.passos.map((s, i) => `<span class="${eg.has(i) ? "gargalo" : ""}"><b>${i + 1}</b> ${esc(s.app)} · ${Math.round(100 * s.duracao_media_s / total)}%</span>`).join("")}</div></div>`;
+}
+
+function empilhadas(dias, processos) {
+  const ps = processos.slice(0, 3), tot = d => Object.values(d.por_processo).reduce((a, b) => a + b, 0);
+  const mx = Math.max(1, ...dias.map(tot)), dm = d => `${d.dia.slice(8, 10)}/${d.dia.slice(5, 7)}`;
+  return `<div class="legenda">${ps.map((p, i) => `<span><i class="sw s${i + 1}"></i>${esc(p.documento.nome)}</span>`).join("")}</div>
+    <div class="gcols">${dias.map(d => `<div class="gcol" title="${dm(d)}: ${tot(d)} execução(ões)${ps.map(p => ` · ${d.por_processo[p.id] || 0} ${esc(p.documento.nome)}`).join("")}">
+      <span class="val">${tot(d)}</span><span class="pilha" style="height:${(100 * tot(d) / mx).toFixed(1)}%">${ps.map((p, i) => [p, i]).reverse().map(([p, i]) => d.por_processo[p.id] ? `<span class="s${i + 1}" style="flex-grow:${d.por_processo[p.id]}"></span>` : "").join("")}</span>
+      <span class="rot">${dm(d)}</span></div>`).join("")}</div>
+    <details class="tabela-dados"><summary>Ver tabela</summary><div class="tabela"><table><thead><tr><th>Dia</th>${ps.map(p => `<th class="num">${esc(p.documento.nome)}</th>`).join("")}<th class="num">Total</th></tr></thead>
+    <tbody>${dias.map(d => `<tr><td>${dm(d)}</td>${ps.map(p => `<td class="num">${d.por_processo[p.id] || 0}</td>`).join("")}<td class="num">${tot(d)}</td></tr>`).join("")}</tbody></table></div></details>`;
+}
+
+function calor(m, horas) {
+  const mx = Math.max(1, ...m.flat()), dias = ["Seg", "Ter", "Qua", "Qui", "Sex"];
+  return `<div class="calor-wrap"><div class="calor" style="grid-template-columns:34px repeat(${horas.length}, minmax(0, 1fr))">
+    <span></span>${horas.map(h => `<span class="h">${h}h</span>`).join("")}
+    ${m.map((linha, di) => `<span class="d">${dias[di]}</span>${linha.map((v, hi) => { const n = v ? Math.max(1, Math.ceil(v / mx * 5)) : 0; return `<span class="cel n${n}" title="${dias[di]} ${horas[hi]}h: ${v} execução(ões) iniciada(s)">${v && n >= 4 ? v : ""}</span>`; }).join("")}`).join("")}
+    </div><div class="calor-esc"><span>menos</span>${[1, 2, 3, 4, 5].map(n => `<i class="cel n${n}"></i>`).join("")}<span>mais</span></div></div>`;
+}
+
+function dispersao(p) {
+  const ex = p.execucoes; if (ex.length < 2) return "";
+  const W = 640, H = 220, ml = 46, mr = 12, mt = 12, mb = 26;
+  const t0 = Math.min(...ex.map(e => e[0])), t1 = Math.max(...ex.map(e => e[0]));
+  const dur = ex.map(e => e[1]), ord = [...dur].sort((a, b) => a - b), med = ord[Math.floor(ord.length / 2)];
+  const ymax0 = Math.ceil(Math.max(...dur) / 60) || 1, passo = Math.max(1, Math.ceil(ymax0 / 4)), ymax = Math.ceil(ymax0 / passo) * passo;
+  const sx = (W - ml - mr) / ((t1 - t0) || 1), sy = (H - mt - mb) / (ymax * 60), ym = H - mb - med * sy;
+  let g = "";
+  for (let m = 0; m <= ymax; m += passo) { const y = H - mb - m * 60 * sy; g += `<line class="grade" x1="${ml}" x2="${W - mr}" y1="${y}" y2="${y}"/><text class="eixo" x="${ml - 6}" y="${y + 4}" text-anchor="end">${m} min</text>`; }
+  const pts = ex.map(e => { const lento = e[1] >= med * 2; return `<circle class="${lento ? "lento" : ""}" cx="${(ml + (e[0] - t0) * sx).toFixed(1)}" cy="${(H - mb - e[1] * sy).toFixed(1)}" r="4.5"><title>${dataHora(e[0])} · ${num(e[1] / 60)} min${lento ? " · lenta" : ""}</title></circle>`; }).join("");
+  const d0 = new Date(t0 * 1000).toLocaleDateString("pt-BR").slice(0, 5), d1 = new Date(t1 * 1000).toLocaleDateString("pt-BR").slice(0, 5);
+  return `<svg class="disp" viewBox="0 0 ${W} ${H}" role="img" aria-label="Duração de cada execução">${g}
+    <line class="mediana" x1="${ml}" x2="${W - mr}" y1="${ym}" y2="${ym}"/>${pts}
+    <text class="rot-med" x="${ml + 6}" y="${ym - 8}">normal: ${num(med / 60)} min</text>
+    <text class="eixo" x="${ml}" y="${H - 6}">${d0}</text><text class="eixo" x="${W - mr}" y="${H - 6}" text-anchor="end">${d1}</text></svg>
+    <div class="legenda"><span><i class="sw s1 bola"></i>execução normal</span><span><i class="sw lento bola"></i>2× ou mais o tempo normal</span><span><i class="sw linha"></i>tempo normal (mediana)</span></div>`;
+}
+
+function faixas(p) {
+  const mx = Math.max(1, ...p.passos.map(s => s.p90_s)), eg = new Set(p.gargalos.map(g => g.etapa)), pc = v => (100 * v / mx).toFixed(1);
+  return `<div class="faixas">${p.passos.map((s, i) => `<div class="faixa-l" title="Etapa ${i + 1} · ${esc(s.app)}: normal ${s.mediana_s} s; metade das execuções entre ${s.p25_s} e ${s.p75_s} s; 90% até ${s.p90_s} s">
+    <span class="rot"><b>${i + 1}</b> ${esc(s.app)}</span>
+    <span class="trilho-f"><span class="bigode" style="left:${pc(s.p25_s)}%;width:${pc(s.p90_s - s.p25_s)}%"></span>
+      <span class="caixa ${eg.has(i) ? "gargalo" : ""}" style="left:${pc(s.p25_s)}%;width:${Math.max(.8, 100 * (s.p75_s - s.p25_s) / mx).toFixed(1)}%"></span>
+      <span class="med" style="left:${pc(s.mediana_s)}%"></span></span>
+    <span class="val">${mmss(s.mediana_s)}</span></div>`).join("")}
+    <div class="legenda"><span><i class="sw caixa-leg"></i>metade das execuções</span><span><i class="sw linha"></i>até 90% das execuções</span><span><i class="sw med-leg"></i>tempo normal</span></div></div>`;
+}
+
+function listaGargalos(lista, comProcesso) {
+  if (!lista.length) return '<p class="lead" style="margin:0">Nenhum gargalo identificado: as etapas têm tempo estável e bem distribuído.</p>';
+  return `<div class="gargalos">${lista.map(g => `<div class="gargalo-item sev-${g.severidade}" data-area="${esc(g.area || "")}" data-sev="${g.severidade}">
+    <div class="g-topo"><span class="sev">${g.severidade === "alta" ? "▲ Alta" : "● Média"}</span><strong>${esc(g.titulo)}</strong>
+      ${comProcesso ? `<span class="lead">· <a href="${g.link}">${esc(g.processo)}</a> · ${esc(g.responsavel)}</span>` : ""}
+      ${g.horas_semana ? `<span class="impacto">${br(g.horas_semana)} h<small>${esc(g.metrica)}</small></span>` : ""}</div>
+    <p>${esc(g.detalhe)}</p><p class="sug"><b>O que fazer:</b> ${esc(g.sugestao)}</p></div>`).join("")}</div>`;
+}
+
+function gargalosDe(contas) {
+  const ordem = { alta: 0, media: 1 }, l = [];
+  contas.forEach(c => { const r = res(c); if (r) r.processos.forEach(p => p.gargalos.forEach(g => l.push({ ...g, processo: p.documento.nome, responsavel: c.nome, area: c.area || "Sem área definida", link: `#c${c.id}-${p.id}` }))); });
+  return l.sort((a, b) => ordem[a.severidade] - ordem[b.severidade] || (b.horas_semana || 0) - (a.horas_semana || 0));
+}
+
+function telaGraficosEmpresa() {
+  const comDados = estado.contas.filter(res);
+  if (!comDados.length) return '<h1>Gráficos da empresa</h1><div class="card"><p class="lead" style="margin:0">Os gráficos aparecem quando houver colaboradores com processos documentados.</p></div>';
+  const porArea = {}, gArea = {}, procs = [];
+  comDados.forEach(c => { const r = res(c), a = c.area || "Sem área definida";
+    porArea[a] = (porArea[a] || 0) + r.estatisticas.tempo_em_processos_s / r.periodo.dias * 5 / 3600;
+    r.processos.forEach(p => { procs.push({ rotulo: p.documento.nome, sub: `${c.nome} · ${a}`, valor: p.horas_semana, texto: hTexto(p.horas_semana), destaque: p.gargalos.some(g => g.severidade === "alta"), p, c });
+      const ga = gArea[a] ||= { alta: 0, media: 0 }; p.gargalos.forEach(g => ga[g.severidade]++); }); });
+  procs.sort((a, b) => b.valor - a.valor);
+  const areas = Object.entries(porArea).sort((a, b) => b[1] - a[1]).map(([a, v]) => ({ rotulo: a, valor: v, texto: hTexto(v) }));
+  const mxg = Math.max(1, ...Object.values(gArea).map(v => v.alta + v.media));
+  const gBar = Object.keys(gArea).sort().map(a => { const v = gArea[a]; return `<div class="gbarra" title="${esc(a)}: ${v.alta} de severidade alta, ${v.media} média"><span class="rot"><span class="nome">${esc(a)}</span></span>
+    <span class="trilho" style="display:flex;gap:2px">${v.alta ? `<span class="enc" style="width:${(100 * v.alta / mxg).toFixed(1)}%;background:var(--danger);border-radius:0"></span>` : ""}${v.media ? `<span class="enc" style="width:${(100 * v.media / mxg).toFixed(1)}%;background:var(--warn)"></span>` : ""}</span>
+    <span class="val">${v.alta + v.media}</span></div>`; }).join("");
+  return `<h1>Gráficos da empresa</h1><p class="lead">Onde está o tempo gasto em tarefas repetitivas e quais áreas concentram os gargalos. Passe o mouse sobre as barras para ver os valores.</p>
+    <div class="grade g2"><div><h2>Horas por semana em tarefas repetitivas, por área</h2><div class="card">${barrasH(areas)}</div></div>
+      <div><h2>Gargalos por área</h2><div class="card"><div class="legenda"><span><i class="sw" style="background:var(--danger)"></i>alta</span><span><i class="sw" style="background:var(--warn)"></i>média</span></div><div class="gbarras">${gBar}</div>
+      <p class="lead" style="margin-top:12px;font-size:13px"><a href="#gargalos">Ver todos os gargalos →</a></p></div></div></div>
+    <h2>Processos que mais consomem tempo (horas por semana)</h2><div class="card"><div class="legenda"><span><i class="sw s1"></i>processo</span><span><i class="sw" style="background:var(--danger)"></i>com gargalo de severidade alta</span></div>${barrasH(procs.slice(0, 10))}</div>
+    <h2>Onde o tempo vai em cada processo</h2><div class="grade">${procs.map(x => `<div class="card"><div class="titulo-linha" style="margin-bottom:10px"><a href="#c${x.c.id}-${x.p.id}"><strong>${esc(x.p.documento.nome)}</strong></a><span class="lead">${esc(x.c.nome)} · ${x.p.duracao_media} por execução</span></div>${composicao(x.p)}</div>`).join("")}
+    <p class="lead" style="font-size:13px">Cada barra é uma execução média dividida por etapa. Em vermelho, as etapas com gargalo.</p></div>`;
+}
+
+function telaGargalos() {
+  const l = gargalosDe(estado.contas), areas = [...new Set(l.map(g => g.area))].sort();
+  const inst = l.filter(g => g.tipo === "instavel").reduce((a, g) => a + (g.horas_semana || 0), 0);
+  return `<div class="titulo-linha"><div><h1>Gargalos nos processos</h1><p class="lead">Pontos em que os processos perdem tempo, medidos nos dados da coleta. Os de severidade alta aparecem primeiro.</p></div>
+    <div class="acoes"><label for="f-area" style="font-weight:400;display:flex;align-items:center;gap:8px">Área <select id="f-area" style="width:auto"><option value="">Todas</option>${areas.map(a => `<option>${esc(a)}</option>`).join("")}</select></label>
+    <label for="f-sev" style="font-weight:400;display:flex;align-items:center;gap:8px">Severidade <select id="f-sev" style="width:auto"><option value="">Todas</option><option value="alta">Alta</option><option value="media">Média</option></select></label></div></div>
+    <div class="grade g4" style="margin-top:18px">
+      <div class="card kpi"><div class="v">${l.length}</div><div class="l">gargalos identificados</div></div>
+      <div class="card kpi"><div class="v" style="color:var(--danger)">${l.filter(g => g.severidade === "alta").length}</div><div class="l">de severidade alta</div></div>
+      <div class="card kpi"><div class="v">${new Set(l.map(g => g.processo + g.responsavel)).size}</div><div class="l">processos afetados</div></div>
+      <div class="card kpi"><div class="v">${br(inst.toFixed(1))} h</div><div class="l">por semana acima do tempo normal, nas etapas instáveis</div></div></div>
+    <h2>Lista de gargalos</h2><div id="lista-g">${listaGargalos(l, true)}</div><p class="lead" id="sem-g" hidden>Nenhum gargalo com esses filtros.</p>
+    <h2>Como os gargalos são identificados</h2><div class="card"><ul class="limpa" style="margin:0">
+      <li><strong>Etapa concentra o tempo:</strong> uma etapa ocupa 35% ou mais do tempo do processo.</li>
+      <li><strong>Tempo instável:</strong> 1 em cada 10 execuções da etapa leva 2 vezes ou mais o tempo normal (mediana).</li>
+      <li><strong>Interrupções frequentes:</strong> o colaborador sai do processo no meio em 10% ou mais das vezes.</li>
+      <li><strong>Digitação manual repetitiva:</strong> 3 ou mais campos preenchidos à mão na mesma etapa, em toda execução.</li></ul></div>`;
+}
+
+function telaGraficosColab(c) {
+  const r = res(c), proprio = c.id === eu.id;
+  if (!r) return telaErro("Sem gráficos ainda", "Os gráficos aparecem depois que os processos forem documentados.");
+  return `<p><a href="#c${c.id}">← ${proprio ? "Minhas atividades" : "Atividades de " + esc(c.nome)}</a></p>
+    <h1>${proprio ? "Meus gráficos" : "Gráficos de " + esc(c.nome)}</h1><p class="lead">${esc(c.funcao || "")} · ${esc(c.area || "")} · ${r.periodo.dias} dias observados. Passe o mouse sobre os gráficos para ver os valores.</p>
+    <div class="grade g2"><div><h2>Horas por semana em cada processo</h2><div class="card">${barrasH(r.processos.map(p => ({ rotulo: p.documento.nome, sub: p.frequencia, valor: p.horas_semana, texto: hTexto(p.horas_semana) })))}</div></div>
+      <div><h2>Quando os processos começam</h2><div class="card">${calor(r.graficos.calor, r.graficos.calor_horas)}</div></div></div>
+    <h2>Execuções por dia</h2><div class="card">${empilhadas(r.graficos.execucoes_por_dia, r.processos)}</div>
+    <h2>Onde o tempo vai em cada processo</h2><div class="grade">${r.processos.map(p => `<div class="card"><div class="titulo-linha" style="margin-bottom:10px"><a href="#c${c.id}-${p.id}"><strong>${esc(p.documento.nome)}</strong></a><span class="lead">${p.duracao_media} por execução</span></div>${composicao(p)}</div>`).join("")}
+    <p class="lead" style="font-size:13px">Cada barra é uma execução média dividida por etapa. Em vermelho, as etapas com gargalo.</p></div>`;
+}
+
+
+// ------------------------------------------------------------------ documentação (POP) e manual
+function pop(p, c, codigo, link) {
+  const d = p.documento, eg = new Set(p.gargalos.map(g => g.etapa)), mesmo = d.passos.length === p.passos.length;
+  const lista = (t, xs) => xs && xs.length ? `<h4 class="pop-sec">${t}</h4><ul class="limpa">${xs.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+  return `<article class="pop">
+    <div class="pop-cab"><div><span class="pop-cod">${esc(codigo)}</span>
+      <h3 class="pop-nome">${link ? `<a href="${link}">${esc(d.nome)}</a>` : esc(d.nome)}</h3><p class="lead">${esc(d.objetivo)}</p></div>
+      <span class="tag neutra">escrito por ${esc(d.gerado_por)}</span></div>
+    <dl class="pop-ficha">
+      <div><dt>Responsável</dt><dd>${esc(c.nome)} · ${esc(c.funcao || d.responsavel || "—")}</dd></div>
+      <div><dt>Área</dt><dd>${esc(c.area || "—")}</dd></div>
+      <div><dt>Frequência</dt><dd>${esc(p.frequencia)}</dd></div>
+      <div><dt>Horário típico</dt><dd>${p.horario_tipico} <span class="lead">(${p.janela_horario})</span></dd></div>
+      <div><dt>Duração</dt><dd>${p.duracao_media} por execução</dd></div>
+      <div><dt>Sistemas</dt><dd>${esc([...new Set(p.aplicativos)].join(", "))}</dd></div>
+      <div class="largo"><dt>Quando fazer</dt><dd>${esc(d.gatilho)}</dd></div>
+    </dl>
+    ${(d.entradas || []).length || (d.saidas || []).length ? `<div class="pop-es">
+      ${(d.entradas || []).length ? `<div><h4>Entradas</h4><ul class="limpa">${d.entradas.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+      ${(d.saidas || []).length ? `<div><h4>Resultado</h4><ul class="limpa">${d.saidas.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}</div>` : ""}
+    <h4 class="pop-sec">Passo a passo</h4>
+    <ol class="pop-passos">${d.passos.map((s, i) => `<li class="${mesmo && eg.has(i) ? "com-gargalo" : ""}">
+      <div class="pp-topo"><span class="pp-num">${i + 1}</span><strong>${esc(s.titulo)}</strong>${s.sistema ? `<span class="tag neutra">${esc(s.sistema)}</span>` : ""}${s.tempo ? `<span class="pp-tempo">${esc(s.tempo)}</span>` : ""}</div>
+      ${s.descricao ? `<p>${esc(s.descricao)}</p>` : ""}
+      ${(s.subpassos || []).length ? `<ol class="pp-sub">${s.subpassos.map((x, j) => `<li><span class="pp-subnum">${i + 1}.${j + 1}</span>${esc(x)}</li>`).join("")}</ol>` : ""}</li>`).join("")}</ol>
+    ${lista("Pontos de atenção", d.pontos_de_atencao)}${lista("Oportunidades de melhoria", d.oportunidades_de_automacao)}
+  </article>`;
+}
+
+function rotinaSemanal(r) {
+  const nomes = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"], sem = [[], [], [], [], []];
+  r.processos.forEach(p => {
+    const dias = p.tipo_frequencia === "diaria" ? [0, 1, 2, 3, 4] : [...new Set(p.execucoes.map(e => (new Date(e[0] * 1000).getDay() + 6) % 7))];
+    dias.forEach(d => { if (d < 5) sem[d].push(p); });
+  });
+  return sem.map((ps, d) => [nomes[d], ps.sort((a, b) => a.horario_tipico.localeCompare(b.horario_tipico))]);
+}
+
+function telaManual(c) {
+  const r = res(c), proprio = c.id === eu.id;
+  if (!r) return telaErro("Manual ainda não disponível", "O manual fica disponível depois que os processos forem documentados.");
+  const f = r.descricao_funcao;
+  return `<p><a href="#c${c.id}">← ${proprio ? "Minhas atividades" : "Atividades de " + esc(c.nome)}</a></p>
+    <h1>Manual de processos · ${esc(c.nome)}</h1>
+    <p class="lead">${esc(c.funcao || "")} · ${esc(c.area || "")} · observado de ${data(r.periodo.inicio)} a ${data(r.periodo.fim)}</p>
+    <h2>Descrição da função</h2><div class="card">
+      <div class="titulo-linha"><strong style="font-size:17px">${esc(f.cargo_provavel)}</strong><span class="tag neutra">escrito por ${esc(f.gerado_por)}</span></div>
+      <p style="margin:8px 0 0">${esc(f.resumo)}</p>
+      <div class="grade g2" style="margin-top:12px">
+        <div><strong>Responsabilidades</strong><ul class="limpa">${(f.responsabilidades || []).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+        <div>${(f.sistemas_utilizados || []).length ? `<strong>Sistemas utilizados</strong><p style="margin:6px 0 0">${esc(f.sistemas_utilizados.join(", "))}</p>` : ""}
+          ${(f.competencias || []).length ? `<strong style="display:block;margin-top:10px">Competências</strong><p style="margin:6px 0 0">${esc(f.competencias.join(", "))}</p>` : ""}
+          ${(f.recomendacoes || []).length ? `<strong style="display:block;margin-top:10px">Recomendações</strong><ul class="limpa">${f.recomendacoes.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}</div>
+      </div></div>
+    <h2>Rotina da semana</h2><div class="rotina-sem">${rotinaSemanal(r).map(([dia, ps]) => `<div class="dia"><h4>${dia}</h4>${ps.length ? ps.map(p => `<div class="it"><span class="hora">${p.horario_tipico}</span><a href="#c${c.id}-${p.id}">${esc(p.documento.nome)}</a>${p.ocorrencias / r.periodo.dias >= 2 ? ` <span class="lead">· ~${Math.round(p.ocorrencias / r.periodo.dias)}×</span>` : ""}</div>`).join("") : '<p class="lead" style="font-size:13px;margin:0">Sem processos recorrentes.</p>'}</div>`).join("")}</div>
+    <h2>Procedimentos</h2><div class="grade">${r.processos.map((p, i) => `<div class="card">${pop(p, c, `POP ${c.id}.${i + 1}`, `#c${c.id}-${p.id}`)}</div>`).join("")}</div>`;
+}
+
+function telaManualEmpresa() {
+  const areas = {};
+  estado.contas.forEach(c => (areas[c.area || "Sem área definida"] ||= []).push(c));
+  const total = estado.contas.reduce((a, c) => a + (res(c) ? res(c).processos.length : 0), 0);
+  return `<h1>Manual de processos da empresa</h1><p class="lead">A documentação das funções de cada colaborador, organizada por área. ${total} procedimento(s) documentado(s).</p>
+    ${Object.keys(areas).sort().map(a => `<h2>${esc(a)}</h2><div class="grade">${areas[a].map(c => { const r = res(c); return `<div class="card">
+      <div class="titulo-linha"><div><h3>${esc(c.nome)}</h3><p class="lead">${esc(c.funcao || "Função não informada")}</p></div>${r ? `<a class="btn sec" href="#c${c.id}-manual">Abrir manual</a>` : ""}</div>
+      ${r ? `<p style="margin:10px 0 6px">${esc(r.descricao_funcao.resumo)}</p><ol class="manual-indice">${r.processos.map(p => `<li><a href="#c${c.id}-${p.id}">${esc(p.documento.nome)}</a> <span class="lead">· ${esc(p.frequencia)} · ${p.documento.passos.length} etapas</span></li>`).join("")}</ol>` : '<p class="lead" style="margin:10px 0 0">Ainda sem processos documentados.</p>'}</div>`; }).join("")}</div>`).join("")}`;
+}
+
+
+// ------------------------------------------------------------------ melhorias e gargalos
+let statusMelhorias = {};
+try { statusMelhorias = JSON.parse(localStorage.getItem("taskminer-melhorias") || "{}") || {}; } catch (e) {}
+function salvarStatus() { try { localStorage.setItem("taskminer-melhorias", JSON.stringify(statusMelhorias)); } catch (e) {} }
+const ROT_STATUS = Object.fromEntries(BASE.status_opcoes);
+const ORIGEM_TXT = { padrao: "Padrão observado na coleta", gargalo: "Gargalo", documentacao: "Recomendação da documentação" };
+
+function telaMelhorias(contas, c, aba) {
+  const editavel = eu.papel === "admin", proprio = c && c.id === eu.id;
+  const lista = [];
+  contas.forEach(x => { const r = res(x); if (r) r.melhorias.forEach(i => lista.push({ ...i, status: statusMelhorias[i.chave] || "nova" })); });
+  const ordem = { alto: 0, rapido: 1, avaliar: 2 };
+  lista.sort((a, b) => ordem[a.prioridade] - ordem[b.prioridade] || (b.horas_semana || 0) - (a.horas_semana || 0));
+  const gl = gargalosDe(contas), aberta = i => !["concluida", "descartada"].includes(i.status);
+  const matriz = {}; lista.filter(aberta).forEach(i => { const k = ((i.horas_semana || 0) >= 1 ? "alto" : "baixo") + "-" + i.esforco; matriz[k] = (matriz[k] || 0) + 1; });
+  const areas = [...new Set(lista.map(i => i.area))].sort();
+  const cel = (imp, e, cls, txt) => `<div class="cel-m ${cls}"><b>${matriz[imp + "-" + e] || 0}</b>${txt}</div>`;
+  const cards = lista.map(i => `<article class="sug ${aberta(i) ? "" : "feita"}" data-area="${esc(i.area)}" data-pri="${i.prioridade}" data-ori="${i.origem}" data-st="${i.status}">
+      <div class="sug-topo"><span class="tag pri-${i.prioridade}">${esc(i.prioridade_txt)}</span><strong>${esc(i.titulo)}</strong>
+        ${i.horas_semana ? `<span class="impacto">${br(i.horas_semana)} h<small>por semana nas etapas envolvidas</small></span>` : ""}</div>
+      <p class="lead" style="font-size:13px">${i.link ? `<a href="${i.link}">${esc(i.processo)}</a>` : esc(i.processo)}${c ? "" : ` · ${esc(i.responsavel)} · ${esc(i.area)}`}${i.etapas.length ? ` · etapa${i.etapas.length > 1 ? "s" : ""} ${i.etapas.join(", ")}` : ""}</p>
+      ${i.detalhe !== i.sugestao ? `<p>${esc(i.detalhe)}</p>` : ""}<p class="o-que"><b>Sugestão:</b> ${esc(i.sugestao)}</p>
+      <div class="sug-rodape"><span>${esc(i.esforco_txt)}</span><span>· ${ORIGEM_TXT[i.origem]}</span>
+        ${editavel ? `<label style="font-weight:400;display:flex;gap:6px;align-items:center;margin-left:auto">Situação <select class="sel-status" data-chave="${esc(i.chave)}">${BASE.status_opcoes.map(([k, v]) => `<option value="${k}" ${k === i.status ? "selected" : ""}>${v}</option>`).join("")}</select></label>`
+                   : `<span class="tag st-${i.status}" style="margin-left:auto">${ROT_STATUS[i.status]}</span>`}</div></article>`).join("");
+  const voltar = c && !proprio ? `<p><a href="#c${c.id}">← Atividades de ${esc(c.nome)}</a></p>` : "";
+  return `${voltar}<h1>${proprio ? "Minhas melhorias e gargalos" : c ? "Melhorias e gargalos · " + esc(c.nome) : "Melhorias e gargalos"}</h1>
+    <p class="lead">Sugestões geradas a partir do que foi observado na coleta e os pontos em que os processos perdem tempo. As mais prioritárias aparecem primeiro.</p>
+    <div class="grade g4" style="margin-top:18px">
+      <div class="card kpi"><div class="v">${lista.filter(aberta).length}</div><div class="l">sugestões em aberto</div></div>
+      <div class="card kpi"><div class="v" style="color:var(--danger)">${lista.filter(i => aberta(i) && i.prioridade === "alto").length}</div><div class="l">de alto impacto (1 h+ por semana)</div></div>
+      <div class="card kpi"><div class="v" style="color:var(--accent)">${lista.filter(i => aberta(i) && i.prioridade === "rapido").length}</div><div class="l">ganhos rápidos (esforço baixo)</div></div>
+      <div class="card kpi"><div class="v">${gl.length}</div><div class="l">gargalos, ${gl.filter(g => g.severidade === "alta").length} de severidade alta</div></div></div>
+    <div class="abas" role="tablist">
+      <button role="tab" id="aba-sugestoes" aria-selected="${aba !== "gargalos"}">Sugestões de melhoria<span class="cont">${lista.length}</span></button>
+      <button role="tab" id="aba-gargalos" aria-selected="${aba === "gargalos"}">Gargalos<span class="cont">${gl.length}</span></button></div>
+    <section id="painel-sugestoes" ${aba === "gargalos" ? "hidden" : ""}>
+      <div class="grade g2" style="margin-top:6px">
+        <div><h2>Por onde começar</h2><div class="card"><div class="matriz">
+          <span></span><span class="cab">Esforço baixo</span><span class="cab">Esforço médio</span><span class="cab">Esforço alto</span>
+          <span class="eixo">Impacto alto<br>(1 h+/sem)</span>${cel("alto", "baixo", "melhor", "faça já")}${cel("alto", "medio", "bom", "planeje")}${cel("alto", "alto", "", "projeto")}
+          <span class="eixo">Impacto menor</span>${cel("baixo", "baixo", "bom", "ganho rápido")}${cel("baixo", "medio", "", "avaliar")}${cel("baixo", "alto", "", "baixa prioridade")}</div>
+          <p class="lead" style="margin:12px 0 0;font-size:13px">Sugestões em aberto, pelo tempo envolvido hoje e pelo esforço estimado para resolver.</p></div></div>
+        <div><h2>Como as sugestões são geradas</h2><div class="card"><ul class="limpa" style="margin:0">
+          <li><strong>Padrões de desperdício</strong> vistos na coleta: copiar e colar entre sistemas, exportar e importar à mão, mover arquivos, escrever o mesmo e-mail, digitar os mesmos dados em dois sistemas.</li>
+          <li><strong>Gargalos</strong>: etapas lentas, instáveis, interrompidas ou com muita digitação.</li>
+          <li><strong>Recomendações</strong> escritas na documentação de cada processo.</li></ul>
+          <p class="lead" style="margin:10px 0 0;font-size:13px">O impacto é o tempo gasto hoje nas etapas envolvidas, não uma promessa de economia.${editavel ? " Nesta demonstração, a situação de cada sugestão fica salva só neste navegador." : ""}</p></div></div></div>
+      <div class="filtros">
+        ${!c && areas.length > 1 ? `<label for="m-area">Área <select id="m-area"><option value="">Todas</option>${areas.map(a => `<option>${esc(a)}</option>`).join("")}</select></label>` : ""}
+        <label for="m-pri">Prioridade <select id="m-pri"><option value="">Todas</option><option value="alto">Alto impacto</option><option value="rapido">Ganho rápido</option><option value="avaliar">Avaliar</option></select></label>
+        <label for="m-ori">Origem <select id="m-ori"><option value="">Todas</option><option value="padrao">Padrão de desperdício</option><option value="gargalo">Gargalo</option><option value="documentacao">Recomendação</option></select></label>
+        <label for="m-st">Situação <select id="m-st"><option value="abertas">Em aberto</option><option value="">Todas</option>${BASE.status_opcoes.map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select></label></div>
+      <div class="grade" id="lista-sug" style="margin-top:14px">${cards || '<div class="card"><p class="lead" style="margin:0">Nenhuma sugestão ainda. Elas aparecem depois que os processos forem documentados.</p></div>'}</div>
+      <p class="lead" id="sem-sug" hidden style="margin-top:14px">Nenhuma sugestão com esses filtros.</p></section>
+    <section id="painel-gargalos" ${aba === "gargalos" ? "" : "hidden"}>
+      <h2>Gargalos identificados</h2>${listaGargalos(gl, true)}
+      <h2>Como os gargalos são identificados</h2><div class="card"><ul class="limpa" style="margin:0">
+        <li><strong>Etapa concentra o tempo:</strong> uma etapa ocupa 35% ou mais do tempo do processo.</li>
+        <li><strong>Tempo instável:</strong> 1 em cada 10 execuções da etapa leva 2 vezes ou mais o tempo normal (mediana).</li>
+        <li><strong>Interrupções frequentes:</strong> o colaborador sai do processo no meio em 10% ou mais das vezes.</li>
+        <li><strong>Digitação manual repetitiva:</strong> 3 ou mais campos preenchidos à mão na mesma etapa, em toda execução.</li></ul></div></section>`;
+}
+
+function ligarMelhorias() {
+  const $ = id => document.getElementById(id);
+  if (!$("lista-sug")) return;
+  const filtrar = () => { let n = 0;
+    document.querySelectorAll("#lista-sug .sug").forEach(el => { const a = $("m-area") ? $("m-area").value : "", p = $("m-pri").value, o = $("m-ori").value, st = $("m-st").value;
+      const ok = (!a || el.dataset.area === a) && (!p || el.dataset.pri === p) && (!o || el.dataset.ori === o) && (st === "" || (st === "abertas" ? !["concluida", "descartada"].includes(el.dataset.st) : el.dataset.st === st));
+      el.hidden = !ok; if (ok) n++; });
+    $("sem-sug").hidden = n > 0 || !document.querySelector("#lista-sug .sug"); };
+  ["m-area", "m-pri", "m-ori", "m-st"].forEach(id => { if ($(id)) $(id).onchange = filtrar; });
+  filtrar();
+  document.querySelectorAll(".sel-status").forEach(sel => sel.onchange = () => {
+    statusMelhorias[sel.dataset.chave] = sel.value; salvarStatus();
+    const card = sel.closest(".sug"); card.dataset.st = sel.value; card.classList.toggle("feita", ["concluida", "descartada"].includes(sel.value)); });
+  const mostrar = nome => { ["sugestoes", "gargalos"].forEach(k => { $("aba-" + k).setAttribute("aria-selected", k === nome); $("painel-" + k).hidden = k !== nome; }); };
+  $("aba-sugestoes").onclick = () => mostrar("sugestoes");
+  $("aba-gargalos").onclick = () => mostrar("gargalos");
+}
+
+
+// ------------------------------------------------------------------ processo novo fora do padrão
+function novoProcesso(c, k, editavel, mostrarResp) {
+  return `<article class="card novo-proc" data-novo="${c.id}-${k.assinatura}">
+    <div class="np-topo"><span class="tag np-tag">Novo processo identificado</span>${k.recente ? '<span class="tag neutra">começou na parte final da coleta</span>' : ""}</div>
+    <h3>${esc(k.nome_sugerido)} <span class="lead" style="font-weight:400;font-size:14px">(nome sugerido)</span></h3>
+    <p class="lead">${mostrarResp ? `<b style="color:var(--ink)">${esc(c.nome)}</b> · ${esc(c.funcao || "")} · ` : ""}${k.ocorrencias} vezes em ${new Set(k.execucoes.map(e => new Date(e[0] * 1000).toDateString())).size} dias (a partir de ${k.primeira_vez_txt}) · cerca de ${k.duracao_media} por vez</p>
+    ${fluxo(k.aplicativos)}
+    <details class="np-det"><summary>Ver o que foi observado</summary><ol class="np-passos">${k.passos.map(s => `<li><b>${esc(s.app)}</b> · ${esc(s.tela)}${s.acoes.length ? `<span class="lead"> — ${esc(s.acoes.map(a => a.t).join("; "))}</span>` : ""}</li>`).join("")}</ol></details>
+    <p class="np-pergunta">Essa sequência é diferente dos processos de ${esc(c.nome.split(" ")[0])}. <b>Ela deve virar um processo fixo?</b></p>
+    ${editavel ? `<div class="acoes"><button class="btn bt-decidir" data-cid="${c.id}" data-assin="${k.assinatura}" data-dec="fixo" type="button">Sim, tornar processo fixo</button>
+      <button class="btn sec bt-decidir" data-cid="${c.id}" data-assin="${k.assinatura}" data-dec="pontual" type="button">Não, foi algo pontual</button>
+      <button class="btn sec bt-depois" type="button">Decidir depois</button></div>
+      <p class="lead" style="font-size:13px;margin:0">Processo fixo entra no manual com o passo a passo, nos gráficos e nas sugestões de melhoria. Atividade pontual deixa de aparecer aqui.</p>`
+      : '<p class="lead" style="margin:0">O administrador vai decidir se ela entra no seu manual como processo fixo.</p>'}</article>`;
+}
+
+function ligarNovos() {
+  document.querySelectorAll(".bt-decidir").forEach(b => b.onclick = () => {
+    decisaoProc[b.dataset.cid + "-" + b.dataset.assin] = b.dataset.dec; salvarDecisoes();
+    const c = conta(b.dataset.cid), k = estado.resultados[c.id].candidatos.find(x => x.assinatura === b.dataset.assin);
+    if (b.dataset.dec === "fixo") { aviso = ["ok", `“${k.processo_fixo.documento.nome}” agora é um processo fixo de ${c.nome}, com o passo a passo no manual.`]; ir(`c${c.id}-${k.processo_fixo.id}`); }
+    else { aviso = ["ok", "Marcado como atividade pontual: não vai mais aparecer como processo novo."]; render(); }
+  });
+  document.querySelectorAll(".bt-depois").forEach(b => b.onclick = () => { b.closest(".novo-proc").hidden = true; });
+}
+
+// ------------------------------------------------------------------ telas
+function telaEntrar() {
+  const demo = estado.contas.filter(c => c.ativo).map(c => `<button type="button" data-email="${esc(c.email)}">
+      <strong>${esc(c.nome)}</strong>${c.papel === "admin" ? '<span class="tag admin">admin</span>' : '<span></span>'}
+      <small>${esc(c.funcao || "")} · ${esc(c.area || "")}</small></button>`).join("");
+  return `<div class="acesso">${flash()}
+    <h1>Entrar</h1>
+    <p class="lead">Use o e-mail e a senha cadastrados pelo administrador da empresa.</p>
+    <div class="card" style="margin-top:18px">
+      <form class="campos" id="f-entrar">
+        <label for="email">E-mail <input id="email" type="email" autocomplete="username" required></label>
+        <label for="senha">Senha <input id="senha" type="password" autocomplete="current-password" required></label>
+        <button class="btn" type="submit">Entrar</button>
+      </form>
+    </div>
+    <h2>Contas de demonstração · senha ${SENHA_DEMO}</h2>
+    <div class="contas-demo">${demo}</div>
+  </div>`;
+}
+
+function telaEmpresa() {
+  const areas = {};
+  estado.contas.forEach(c => (areas[c.area || "Sem área definida"] ||= []).push(c));
+  const procs = [];
+  let horas = 0;
+  estado.contas.forEach(c => { const r = res(c); if (r) { horas += r.estatisticas.tempo_em_processos_s / r.periodo.dias * 5 / 3600; r.processos.forEach(p => procs.push({ p, c })); } });
+  procs.sort((a, b) => b.p.tempo_total_s - a.p.tempo_total_s);
+  const doc = estado.contas.filter(res).length;
+  const nAreas = Object.keys(areas).filter(a => a !== "Sem área definida").length;
+  const blocos = Object.keys(areas).sort().map(area => `<div class="card">
+    <div class="titulo-linha"><h3>${esc(area)}</h3><span class="lead">${areas[area].length} pessoa(s)</span></div>
+    <div class="tabela" style="margin-top:8px"><table>
+      <thead><tr><th>Colaborador</th><th>Função</th><th>Situação</th><th class="num">Processos</th><th class="num">Tempo repetitivo</th><th></th></tr></thead>
+      <tbody>${areas[area].map(c => { const r = res(c), st = status(c); return `<tr>
+        <td><a href="#c${c.id}"><strong>${esc(c.nome)}</strong></a> ${c.papel === "admin" ? '<span class="tag admin">admin</span>' : ""} ${c.ativo ? "" : '<span class="tag neutra">desativado</span>'}<br><span class="lead" style="font-size:13px">${esc(c.email)}</span></td>
+        <td>${esc(c.funcao || "—")}</td><td><span class="tag ${st.chave}">${st.texto}</span></td>
+        <td class="num">${r ? r.processos.length : "—"}</td><td class="num">${r ? br(r.estatisticas.percentual_repetitivo) + "%" : "—"}</td>
+        <td class="num"><a href="#editar${c.id}">Editar</a></td></tr>`; }).join("")}</tbody></table></div></div>`).join("");
+  const linhas = procs.map(x => `<tr data-area="${esc(x.c.area || "")}">
+      <td><a href="#c${x.c.id}-${x.p.id}">${esc(x.p.documento.nome)}</a>${fluxo(x.p.aplicativos)}</td>
+      <td>${esc(x.c.nome)}</td><td>${esc(x.c.area || "—")}</td>
+      <td><span class="tag ${x.p.tipo_frequencia}">${esc(x.p.frequencia)}</span></td>
+      <td class="num">${x.p.duracao_media}</td><td class="num">${x.p.tempo_total}</td></tr>`).join("");
+  return `${flash()}<div class="titulo-linha"><div><h1>${esc(estado.empresa.nome)}</h1><p class="lead">Processos mapeados de todos os colaboradores, por área.</p></div>
+      <div class="acoes"><a class="btn sec" href="#colaboradores">Cadastrar colaborador</a></div></div>
+    <div class="grade g4" style="margin-top:18px">
+      <div class="card kpi"><div class="v">${estado.contas.filter(c => c.ativo).length}</div><div class="l">colaboradores ativos em ${nAreas} área(s)</div></div>
+      <div class="card kpi"><div class="v">${doc}</div><div class="l">com processos documentados</div></div>
+      <div class="card kpi"><div class="v">${procs.length}</div><div class="l">processos, ${gargalosDe(estado.contas).filter(g => g.severidade === "alta").length} gargalo(s) de severidade alta</div></div>
+      <div class="card kpi"><div class="v">${br(horas.toFixed(1))} h</div><div class="l">por semana em tarefas repetitivas</div></div>
+    </div>
+    ${(() => { const gl = gargalosDe(estado.contas); return gl.length ? `<div class="titulo-linha" style="margin-top:32px"><h2 style="margin:0">Gargalos prioritários</h2><a href="#gargalos" style="font-size:14px">Ver os ${gl.length} gargalos →</a></div><div style="margin-top:12px">${listaGargalos(gl.slice(0, 3), true)}</div>` : ""; })()}
+    <h2>Colaboradores por área</h2><div class="grade">${blocos}</div>
+    <div class="titulo-linha" style="margin-top:32px"><h2 style="margin:0">Todos os processos documentados</h2>
+      <label for="filtro" style="font-weight:400;display:flex;align-items:center;gap:8px">Área
+        <select id="filtro" style="width:auto"><option value="">Todas</option>${[...new Set(procs.map(x => x.c.area))].map(a => `<option>${esc(a)}</option>`).join("")}</select></label></div>
+    <div class="card tabela" style="margin-top:12px"><table id="t-proc">
+      <thead><tr><th>Processo</th><th>Responsável</th><th>Área</th><th>Frequência</th><th class="num">Por execução</th><th class="num">Total no período</th></tr></thead>
+      <tbody>${linhas}</tbody></table></div>`;
+}
+
+function telaColaboradores() {
+  const linhas = estado.contas.map(c => `<tr><td><strong>${esc(c.nome)}</strong><br><span class="lead" style="font-size:13px">${esc(c.email)}</span></td>
+      <td>${esc(c.funcao || "—")}</td><td>${esc(c.area || "—")}</td>
+      <td>${!c.ativo ? '<span class="tag neutra">desativado</span>' : c.papel === "admin" ? '<span class="tag admin">admin</span>' : '<span class="tag neutra">colaborador</span>'}</td>
+      <td class="num"><a href="#editar${c.id}">Editar</a></td></tr>`).join("");
+  const areas = [...new Set(estado.contas.map(c => c.area).filter(Boolean))];
+  return `${flash()}<h1>Colaboradores</h1><p class="lead">Cadastre quem vai participar do mapeamento, com a função e a área de cada um.</p>
+    <datalist id="lista-areas">${areas.map(a => `<option value="${esc(a)}">`).join("")}</datalist>
+    <div class="grade g2">
+      <div><h2>Equipe cadastrada (${estado.contas.length})</h2>
+        <div class="card tabela"><table><thead><tr><th>Nome</th><th>Função</th><th>Área</th><th>Acesso</th><th></th></tr></thead><tbody>${linhas}</tbody></table></div>
+        <h2>Dados da empresa</h2>
+        <div class="card"><form class="campos" id="f-empresa">
+          <div class="linha-campos"><label for="emp-nome">Nome da empresa <input id="emp-nome" value="${esc(estado.empresa.nome)}" required></label>
+          <label for="emp-cnpj">CNPJ <input id="emp-cnpj" value="${esc(estado.empresa.cnpj || "")}"></label></div>
+          <div class="acoes"><button class="btn sec" type="submit">Salvar dados da empresa</button><button class="btn sec" type="button" id="restaurar">Restaurar demonstração</button></div>
+        </form></div>
+      </div>
+      <div><h2>Novo colaborador</h2>
+        <div class="card"><form class="campos" id="f-novo">
+          <label for="n-nome">Nome completo <input id="n-nome" required></label>
+          <label for="n-email">E-mail <span class="dica">é o login dele(a)</span><input id="n-email" type="email" required></label>
+          <label for="n-funcao">Função <input id="n-funcao" placeholder="Ex.: Comprador"></label>
+          <label for="n-area">Área <input id="n-area" list="lista-areas" placeholder="Ex.: Suprimentos"></label>
+          <label for="n-senha">Senha inicial <span class="dica">mínimo de 8 caracteres</span><input id="n-senha" type="text" autocomplete="off" required></label>
+          <label for="n-papel">Acesso <select id="n-papel"><option value="colaborador">Colaborador: vê só os próprios processos</option><option value="admin">Administrador: vê toda a empresa</option></select></label>
+          <div><button class="btn" type="submit">Cadastrar colaborador</button></div>
+        </form></div>
+      </div>
+    </div>`;
+}
+
+function telaEditar(c) {
+  const areas = [...new Set(estado.contas.map(x => x.area).filter(Boolean))];
+  const st = status(c);
+  return `<p><a href="#colaboradores">← Colaboradores</a></p>${flash()}
+    <div class="titulo-linha"><div><h1>${esc(c.nome)}</h1><p class="lead">${esc(c.funcao || "Função não informada")} · ${esc(c.area || "Área não informada")} · <span class="tag ${st.chave}">${st.texto}</span></p></div>
+      <a class="btn sec" href="#c${c.id}">Ver processos</a></div>
+    <datalist id="lista-areas">${areas.map(a => `<option value="${esc(a)}">`).join("")}</datalist>
+    <div class="grade g2">
+      <div><h2>Cadastro</h2><div class="card"><form class="campos" id="f-editar">
+        <div class="linha-campos"><label for="e-nome">Nome <input id="e-nome" value="${esc(c.nome)}" required></label>
+        <label for="e-email">E-mail (login) <input id="e-email" type="email" value="${esc(c.email)}" required></label></div>
+        <div class="linha-campos"><label for="e-funcao">Função <input id="e-funcao" value="${esc(c.funcao || "")}"></label>
+        <label for="e-area">Área <input id="e-area" list="lista-areas" value="${esc(c.area || "")}"></label></div>
+        <label for="e-papel">Acesso <select id="e-papel" ${c.id === eu.id ? "disabled" : ""}><option value="colaborador">Colaborador</option><option value="admin" ${c.papel === "admin" ? "selected" : ""}>Administrador</option></select></label>
+        <div><button class="btn" type="submit">Salvar alterações</button></div>
+      </form></div></div>
+      <div><h2>Coleta</h2><div class="card">
+        <p class="lead" style="margin-top:0">Comando para o computador de ${esc(c.nome.split(" ")[0])}:</p>
+        <pre class="cmd">python main.py coletar --servidor http://192.168.0.10:5000 --token ${esc(c.token)}…</pre>
+      </div>
+      ${c.id !== eu.id ? `<h2>Acesso</h2><div class="card"><p class="lead" style="margin-top:0">${c.ativo ? "Desativar impede o login e bloqueia o envio de dados pelo agente." : "Esta conta está desativada."}</p>
+        <button class="btn ${c.ativo ? "perigo" : ""}" id="alternar" type="button" style="margin-top:12px">${c.ativo ? "Desativar conta" : "Reativar conta"}</button></div>` : ""}
+      </div>
+    </div>`;
+}
+
+function atividade(p, c, mostrarResp) {
+  const d = p.documento, link = `#c${c.id}-${p.id}`;
+  const busca = (d.nome + " " + c.nome + " " + p.aplicativos.join(" ")).toLowerCase();
+  return `<article class="card ativ" id="ativ-${c.id}-${p.id}" data-busca="${esc(busca)}">
+    <div class="ativ-cab"><div><h3><a href="${link}">${esc(d.nome)}</a></h3><p class="lead">${esc(d.objetivo)}</p></div>
+      <a class="btn sec ativ-btn" href="${link}">Procedimento completo</a></div>
+    <div class="ativ-meta">${mostrarResp ? `<span><b>${esc(c.nome)}</b> · ${esc(c.funcao || "")}</span>` : ""}
+      <span class="tag ${p.tipo_frequencia}">${esc(p.frequencia)}</span>${p.fixado_pelo_gestor ? '<span class="tag fixado">processo novo, fixado pelo gestor</span>' : ""}<span>por volta de ${p.horario_tipico}</span>
+      <span>${p.duracao_media} por execução</span><span>${esc([...new Set(p.aplicativos)].join(" · "))}</span></div>
+    <ol class="ativ-passos">${d.passos.map((s, i) => `<li>
+      <div class="ap-topo"><span class="pp-num">${i + 1}</span><div><strong>${esc(s.titulo)}</strong>
+        <span class="ap-info">${esc(s.sistema || "")}${s.sistema && s.tempo ? " · " : ""}${esc(s.tempo || "")}</span></div></div>
+      ${(s.subpassos || []).length ? `<ol class="pp-sub">${s.subpassos.map((x, j) => `<li><span class="pp-subnum">${i + 1}.${j + 1}</span>${esc(x)}</li>`).join("")}</ol>` : ""}</li>`).join("")}</ol>
+  </article>`;
+}
+
+function telaProcessosEmpresa() {
+  const areas = {};
+  estado.contas.forEach(c => (areas[c.area || "Sem área definida"] ||= []).push(c));
+  const comDados = estado.contas.filter(res), total = comDados.reduce((a, c) => a + res(c).processos.length, 0);
+  return `<div class="titulo-linha"><div><h1>Processos da empresa</h1>
+      <p class="lead">As atividades de cada colaborador e o passo a passo de cada uma, organizados por área. ${total} processo(s) documentado(s).</p></div>
+      <div class="acoes"><a class="btn sec" href="#colaboradores">Cadastrar colaborador</a></div></div>
+    ${(() => { const ns = estado.contas.flatMap(c => pendentes(c).map(k => [c, k])); return ns.length ? `<h2>Processos novos para decidir (${ns.length})</h2><div class="grade">${ns.map(([c, k]) => novoProcesso(c, k, true, true)).join("")}</div>` : ""; })()}
+    <div class="filtros">
+      <label for="f-area">Área <select id="f-area"><option value="">Todas</option>${Object.keys(areas).filter(a => a !== "Sem área definida").sort().map(a => `<option>${esc(a)}</option>`).join("")}</select></label>
+      <label for="f-colab">Colaborador <select id="f-colab"><option value="">Todos</option>${comDados.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select></label>
+      <label for="f-busca">Buscar <input id="f-busca" type="search" placeholder="Ex.: nota fiscal, SAP"></label></div>
+    ${Object.keys(areas).sort().map(a => `<section class="bloco-area" data-area="${a === "Sem área definida" ? "" : esc(a)}"><h2 class="area-tit">${esc(a)}</h2>
+      ${areas[a].map(c => { const r = res(c); return `<div class="bloco-colab" data-colab="${c.id}">
+        <div class="colab-tit"><h3><a href="#c${c.id}">${esc(c.nome)}</a> <span class="lead" style="font-weight:400">· ${esc(c.funcao || "Função não informada")}</span></h3>
+          ${r ? `<span class="lead" style="font-size:13px">${r.processos.length} atividade(s) · observado de ${data(r.periodo.inicio)} a ${data(r.periodo.fim)}</span>` : ""}</div>
+        ${r ? `<div class="grade">${r.processos.map(p => atividade(p, c)).join("")}</div>`
+            : `<div class="card"><p class="lead" style="margin:0">Ainda sem atividades documentadas. Situação: <span class="tag aguardando">Aguardando coleta</span></p></div>`}</div>`; }).join("")}
+    </section>`).join("")}
+    <p class="lead" id="sem-ativ" hidden style="margin-top:18px">Nenhuma atividade encontrada com esses filtros.</p>`;
+}
+
+function telaColaborador(c) {
+  const proprio = c.id === eu.id, r = res(c);
+  let h = `${eu.papel === "admin" && !proprio ? '<p><a href="#processos">← Processos da empresa</a></p>' : ""}${flash()}
+    <h1>${proprio ? "Minhas atividades" : "Atividades de " + esc(c.nome)}</h1>
+    <p class="lead">${proprio ? esc(c.nome) + " · " : ""}${esc(c.funcao || "Função não informada")} · ${esc(c.area || "Área não informada")}${r ? ` · observado de ${data(r.periodo.inicio)} a ${data(r.periodo.fim)}` : ""}</p>`;
+  if (!r) return h + `<div class="card" style="margin-top:18px"><p style="margin:0 0 8px"><span class="tag aguardando">Aguardando coleta</span></p><p style="margin:0">Ainda não há dados de coleta${proprio ? "" : " para " + esc(c.nome.split(" ")[0])}. ${proprio ? 'Veja em <a href="#coleta">Minha coleta</a> como instalar o agente no seu computador.' : "Depois que o agente rodar no computador da pessoa por duas semanas, as atividades aparecem aqui."}</p></div>`;
+  const e = r.estatisticas, f = r.descricao_funcao, ng = r.processos.reduce((a, p) => a + p.gargalos.length, 0);
+  const pend = pendentes(c);
+  return h + (pend.length ? `<h2>${pend.length === 1 ? "Atividade nova identificada" : "Atividades novas identificadas"}</h2><div class="grade">${pend.map(k => novoProcesso(c, k, eu.papel === "admin", false)).join("")}</div>` : "")
+    + `<h2>Rotina da semana</h2><div class="rotina-sem">${rotinaSemanal(r).map(([dia, ps]) => `<div class="dia"><h4>${dia}</h4>${ps.length ? ps.map(p => `<div class="it"><span class="hora">${p.horario_tipico}</span><a href="#c${c.id}-${p.id}">${esc(p.documento.nome)}</a>${p.ocorrencias / r.periodo.dias >= 2 ? ` <span class="lead">· ~${Math.round(p.ocorrencias / r.periodo.dias)}× ao dia</span>` : ""}</div>`).join("") : '<p class="lead" style="font-size:13px;margin:0">Sem atividades recorrentes.</p>'}</div>`).join("")}</div>
+    <h2>Passo a passo de cada atividade</h2><div class="grade">${r.processos.map(p => atividade(p, c)).join("")}</div>
+    <h2>Descrição da função</h2><div class="card">
+      <div class="titulo-linha"><strong style="font-size:17px">${esc(f.cargo_provavel)}</strong><span class="tag neutra">escrito por ${esc(f.gerado_por)}</span></div>
+      <p style="margin:8px 0 0">${esc(f.resumo)}</p>
+      <div class="grade g2" style="margin-top:12px">
+        <div><strong>Responsabilidades</strong><ul class="limpa">${(f.responsabilidades || []).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+        <div>${(f.sistemas_utilizados || []).length ? `<strong>Sistemas utilizados</strong><p style="margin:6px 0 0">${esc(f.sistemas_utilizados.join(", "))}</p>` : ""}
+          ${(f.competencias || []).length ? `<strong style="display:block;margin-top:10px">Competências</strong><p style="margin:6px 0 0">${esc(f.competencias.join(", "))}</p>` : ""}</div></div></div>
+    <h2>Indicadores</h2><div class="card"><div class="mini-kpis" style="margin:0">
+      <span><b>${r.processos.length}</b> atividades recorrentes</span><span><b>${e.media_diaria}</b> de tempo ativo por dia</span>
+      <span><b>${br(e.percentual_repetitivo)}%</b> do tempo em tarefas repetitivas</span><span><b>${ng}</b> gargalo(s) identificado(s)</span></div>
+      <div class="acoes" style="margin-top:12px"><a class="btn sec" href="#c${c.id}-graficos">Ver gráficos</a><a class="btn sec" href="#c${c.id}-melhorias">Ver melhorias e gargalos</a></div></div>`;
+}
+
+function telaProcesso(c, p) {
+  const d = p.documento;
+  return `${flash()}<p><a href="#c${c.id}">← ${c.id === eu.id ? "Minhas atividades" : "Atividades de " + esc(c.nome)}</a></p>
+    <h1>${esc(d.nome)}</h1>
+    <p class="lead">Responsável: ${esc(c.nome)} · ${esc(c.funcao || "")} · ${esc(c.area || "")}</p>
+    <p class="lead" style="margin-top:6px"><span class="tag ${p.tipo_frequencia}">${esc(p.frequencia)}</span> <span class="tag neutra">documentado por ${esc(d.gerado_por)}</span></p>
+    <div class="grade g4" style="margin-top:16px">
+      <div class="card kpi"><div class="v">${p.duracao_media}</div><div class="l">duração média</div></div>
+      <div class="card kpi"><div class="v">${p.horario_tipico}</div><div class="l">horário típico (${p.janela_horario})</div></div>
+      <div class="card kpi"><div class="v">${p.ocorrencias}</div><div class="l">execuções (${br(p.execucoes_semana)} por semana)</div></div>
+      <div class="card kpi"><div class="v">${p.tempo_total}</div><div class="l">tempo total no período</div></div>
+    </div>
+    <h2>Documentação do processo</h2><div class="card">${pop(p, c, `POP ${c.id}.${p.id.slice(1)}`)}</div>
+    <h2>Gargalos (${p.gargalos.length})</h2>${listaGargalos(p.gargalos, false)}
+    <div class="grade g2"><div><h2>Duração de cada execução</h2><div class="card">${dispersao(p)}</div></div>
+      <div><h2>Tempo por etapa</h2><div class="card">${faixas(p)}</div></div></div>
+    <details class="brutos"><summary><h2 style="display:inline">O que foi observado (dados brutos da coleta)</h2></summary>
+    <p class="lead" style="margin:0 0 12px">Ações registradas pelo agente em cada etapa e em quantas execuções elas aparecem. É a base do passo a passo acima.</p><div class="grade">${p.passos.map((s, i) => `<div class="card">
+      <div class="titulo-linha" style="align-items:baseline"><strong>${i + 1}. ${esc(s.app)} · <span class="mono">${esc(s.tela)}</span>${s.site ? ` <span class="tag neutra" title="Site identificado pelo endereço no navegador">${esc(s.site)} · ${esc(s.navegador)}</span>` : ""}</strong><span class="lead">~${s.duracao_media_s} s nesta etapa</span></div>
+      ${s.acoes.length ? `<ul class="limpa">${s.acoes.map(a => `<li>${esc(a.t)} <span class="lead">· ${Math.round(a.f * 100)}% das vezes</span></li>`).join("")}</ul>` : '<p class="lead" style="margin-top:6px">Apenas consulta da tela.</p>'}</div>`).join("")}</div></details>
+    ${d.oportunidades_de_automacao && d.oportunidades_de_automacao.length ? `<h2>Oportunidades de automação</h2><div class="card"><ul class="limpa" style="margin:0">${d.oportunidades_de_automacao.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}`;
+}
+
+function telaColeta() {
+  return `<h1>Minha coleta</h1><p class="lead">Como instalar o agente no seu computador e o que ele registra.</p>
+    <div class="grade g2">
+      <div><h2>Instalar no seu computador (Windows)</h2><div class="card">
+        <ol style="margin:0;padding-left:20px;display:grid;gap:12px">
+          <li>Instale o Python 3.10 ou mais novo, marcando “Add Python to PATH”.</li>
+          <li>Na pasta do TaskMiner, rode:<pre class="cmd">pip install -r requirements.txt</pre></li>
+          <li>Inicie a coleta com o seu código pessoal:<pre class="cmd">python main.py coletar --servidor http://192.168.0.10:5000 --token ${esc(eu.token)}…</pre></li>
+          <li>Aceite o termo de consentimento. A coleta dura 14 dias e continua de onde parou se o computador for desligado.</li>
+        </ol></div></div>
+      <div><h2>O que é registrado</h2><div class="card">
+        <strong>Registrado</strong><ul class="limpa"><li>Aplicativo, janela e sistema em uso (nos sites, só o domínio, ex.: crm.empresa.com.br)</li><li>Nome dos botões e campos clicados</li><li>Atalhos de teclado, Enter e Tab</li><li>Quantidade de caracteres digitados</li><li>Períodos sem uso do computador</li></ul>
+        <strong style="display:block;margin-top:12px">Nunca registrado</strong><ul class="limpa"><li>O texto que você digita e as senhas</li><li>O endereço completo das páginas</li><li>Capturas de tela</li><li>Navegação anônima e gerenciadores de senha</li><li>E-mails, CPFs e telefones em títulos (são mascarados)</li></ul>
+        <p style="margin-bottom:0"><strong>Ctrl+Alt+P</strong> pausa e retoma a coleta a qualquer momento.</p></div></div>
+    </div>`;
+}
+
+function telaErro(t, m) { return `<div class="acesso"><h1>${t}</h1><p class="lead">${m}</p><p style="margin-top:16px"><a class="btn sec" href="#inicio">Voltar ao início</a></p></div>`; }
+
+// ------------------------------------------------------------------ roteador
+function render() {
+  let rota = (location.hash || "#inicio").slice(1);
+  if (!eu && rota !== "entrar") { ir("entrar"); return; }
+  if (eu && (rota === "entrar" || rota === "inicio")) { ir(eu.papel === "admin" ? "processos" : "c" + eu.id); return; }
+  const app = document.getElementById("app");
+  const admin = eu && eu.papel === "admin";
+  let html, m;
+  if (rota === "entrar") html = telaEntrar();
+  else if (rota === "empresa" || rota === "melhorias" || rota === "processos" || rota === "manual" || rota === "graficos" || rota === "gargalos" || rota === "colaboradores" || rota.startsWith("editar")) {
+    if (!admin) html = telaErro("Acesso restrito", "Essa página é só para o administrador da empresa.");
+    else if (rota === "empresa") html = telaEmpresa();
+    else if (rota === "graficos") html = telaGraficosEmpresa();
+    else if (rota === "manual" || rota === "processos") html = telaProcessosEmpresa();
+    else if (rota === "gargalos") html = telaMelhorias(estado.contas, null, "gargalos");
+    else if (rota === "melhorias") html = telaMelhorias(estado.contas, null);
+    else if (rota === "colaboradores") html = telaColaboradores();
+    else { const c = conta(rota.slice(6)); html = c ? telaEditar(c) : telaErro("Página não encontrada", "Esse colaborador não existe."); }
+  }
+  else if (rota === "coleta") html = telaColeta();
+  else if ((m = rota.match(/^c(\d+)-melhorias$/))) {
+    const c = conta(m[1]);
+    if (!c) html = telaErro("Página não encontrada", "Esse colaborador não existe.");
+    else if (!admin && c.id !== eu.id) html = telaErro("Acesso restrito", "Você só pode ver as suas próprias melhorias.");
+    else html = telaMelhorias([c], c);
+  }
+  else if ((m = rota.match(/^c(\d+)-manual$/))) {
+    const c = conta(m[1]);
+    if (!c) html = telaErro("Página não encontrada", "Esse colaborador não existe.");
+    else if (!admin && c.id !== eu.id) html = telaErro("Acesso restrito", "Você só pode ver o seu próprio manual.");
+    else html = telaManual(c);
+  }
+  else if ((m = rota.match(/^c(\d+)-graficos$/))) {
+    const c = conta(m[1]);
+    if (!c) html = telaErro("Página não encontrada", "Esse colaborador não existe.");
+    else if (!admin && c.id !== eu.id) html = telaErro("Acesso restrito", "Você só pode ver os seus próprios gráficos.");
+    else html = telaGraficosColab(c);
+  }
+  else if ((m = rota.match(/^c(\d+)(?:-(p\d+))?$/))) {
+    const c = conta(m[1]);
+    if (!c) html = telaErro("Página não encontrada", "Esse colaborador não existe.");
+    else if (!admin && c.id !== eu.id) html = telaErro("Acesso restrito", "Você só pode ver os seus próprios processos.");
+    else if (m[2]) { const p = res(c) && res(c).processos.find(x => x.id === m[2]); html = p ? telaProcesso(c, p) : telaErro("Página não encontrada", "Esse processo não existe."); }
+    else html = telaColaborador(c);
+  }
+  else html = telaErro("Página não encontrada", "O endereço não existe.");
+  topo(rota);
+  app.innerHTML = html;
+  ligar(rota);
+  window.scrollTo(0, 0);
+}
+
+function ligar(rota) {
+  const $ = id => document.getElementById(id);
+  const val = id => ($(id).value || "").trim();
+  if ($("f-entrar")) {
+    const entrar = (email, senha) => {
+      const c = estado.contas.find(x => x.email === email.toLowerCase());
+      if (c && c.ativo && senha === (c.senha || SENHA_DEMO)) { eu = c; lembrar(); ir("inicio"); }
+      else { aviso = ["erro", "E-mail ou senha incorretos."]; render(); }
+    };
+    $("f-entrar").onsubmit = ev => { ev.preventDefault(); entrar(val("email"), $("senha").value); };
+    document.querySelectorAll(".contas-demo button").forEach(b => b.onclick = () => { $("email").value = b.dataset.email; $("senha").value = SENHA_DEMO; $("senha").focus(); });
+  }
+  ligarMelhorias();
+  ligarNovos();
+  if ($("f-colab")) { const fil = () => { const a = $("f-area").value, cc = $("f-colab").value, b = $("f-busca").value.trim().toLowerCase(); let n = 0;
+      document.querySelectorAll(".bloco-area").forEach(sec => { let va = 0; sec.querySelectorAll(".bloco-colab").forEach(bc => { const ok = (!a || sec.dataset.area === a) && (!cc || bc.dataset.colab === cc); const cards = bc.querySelectorAll(".ativ"); let vc = 0;
+        cards.forEach(card => { const v = ok && (!b || card.dataset.busca.includes(b)); card.hidden = !v; if (v) vc++; }); const m = ok && (cards.length ? vc > 0 : !b); bc.hidden = !m; if (m) va++; n += vc; }); sec.hidden = va === 0; });
+      $("sem-ativ").hidden = n > 0 || (!a && !cc && !b); };
+    $("f-area").onchange = $("f-colab").onchange = fil; $("f-busca").oninput = fil; }
+  if ($("f-sev")) { const fil = () => { let n = 0; document.querySelectorAll("#lista-g .gargalo-item").forEach(el => { const ok = (!$("f-area").value || el.dataset.area === $("f-area").value) && (!$("f-sev").value || el.dataset.sev === $("f-sev").value); el.hidden = !ok; if (ok) n++; }); $("sem-g").hidden = n > 0; }; $("f-area").onchange = $("f-sev").onchange = fil; }
+  if ($("filtro")) $("filtro").onchange = function () { document.querySelectorAll("#t-proc tbody tr").forEach(tr => { tr.hidden = !!this.value && tr.dataset.area !== this.value; }); };
+  if ($("f-novo")) $("f-novo").onsubmit = ev => {
+    ev.preventDefault();
+    const email = val("n-email").toLowerCase();
+    if ($("n-senha").value.length < 8) aviso = ["erro", "A senha inicial precisa ter pelo menos 8 caracteres."];
+    else if (estado.contas.some(c => c.email === email)) aviso = ["erro", "Já existe uma conta com esse e-mail."];
+    else {
+      const id = Math.max(...estado.contas.map(c => c.id)) + 1;
+      estado.contas.push({ id, nome: val("n-nome"), email, funcao: val("n-funcao"), area: val("n-area"), papel: $("n-papel").value, ativo: true, senha: $("n-senha").value, token: Math.random().toString(36).slice(2, 14) });
+      salvar(); aviso = ["ok", `${val("n-nome")} cadastrado(a). Saia e entre com ${email} para ver a tela do colaborador.`];
+    }
+    render();
+  };
+  if ($("f-empresa")) {
+    $("f-empresa").onsubmit = ev => { ev.preventDefault(); estado.empresa.nome = val("emp-nome") || estado.empresa.nome; estado.empresa.cnpj = val("emp-cnpj"); salvar(); aviso = ["ok", "Dados da empresa salvos."]; render(); };
+    $("restaurar").onclick = () => { try { localStorage.removeItem("taskminer-demo"); localStorage.removeItem("taskminer-processos-novos"); localStorage.removeItem("taskminer-melhorias"); } catch (e) {} decisaoProc = {}; statusMelhorias = {}; carregar(); eu = conta(eu.id) || estado.contas[0]; lembrar(); aviso = ["ok", "Demonstração restaurada."]; render(); };
+  }
+  if ($("f-editar")) {
+    const c = conta(rota.slice(6));
+    $("f-editar").onsubmit = ev => {
+      ev.preventDefault();
+      const email = val("e-email").toLowerCase();
+      if (estado.contas.some(x => x.email === email && x.id !== c.id)) aviso = ["erro", "Já existe outra conta com esse e-mail."];
+      else { Object.assign(c, { nome: val("e-nome"), email, funcao: val("e-funcao"), area: val("e-area") }); if (c.id !== eu.id) c.papel = $("e-papel").value; salvar(); aviso = ["ok", "Alterações salvas."]; }
+      render();
+    };
+    if ($("alternar")) $("alternar").onclick = () => { c.ativo = !c.ativo; salvar(); aviso = ["ok", c.ativo ? "Conta reativada." : "Conta desativada: a pessoa não entra mais."]; render(); };
+  }
+}
+
+carregar();
+window.addEventListener("hashchange", render);
+render();
+</script>

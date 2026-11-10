@@ -1,0 +1,22 @@
+# Configuração do Render (plano gratuito). O deploy é disparado pelo GitHub Actions
+# só depois que os testes passam (ver .github/workflows/ci.yml).
+services:
+  - type: web
+    name: taskminer
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --workers 1 --threads 4 --timeout 120
+    autoDeploy: false
+    healthCheckPath: /entrar
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DEMO
+        value: "1"
+      - key: TASKMINING_SECRET_KEY
+        generateValue: true        # gerada pelo Render, nunca fica no repositório
+      - key: ANTHROPIC_API_KEY
+        sync: false                # opcional: preencher no painel do Render
+      - key: DEMO_SENHA
+        sync: false                # opcional: troca a senha das contas de demonstração

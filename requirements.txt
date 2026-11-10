@@ -1,0 +1,13 @@
+# Análise, documentação e painel (qualquer sistema)
+flask>=3.0
+anthropic>=0.40
+python-dotenv>=1.0
+
+# Servidor de produção (Render/Linux)
+gunicorn>=22.0 ; sys_platform != "win32"
+
+# Agente de coleta (somente Windows)
+pywin32>=306 ; sys_platform == "win32"
+psutil>=5.9 ; sys_platform == "win32"
+pynput>=1.7 ; sys_platform == "win32"
+uiautomation>=2.0 ; sys_platform == "win32"

@@ -1,0 +1,9 @@
+.env
+dados/
+__pycache__/
+*.pyc
+Manual_de_Processos_*.md
+.venv/
+.pytest_cache/
+*.log
+relatorio/

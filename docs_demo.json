@@ -1,0 +1,209 @@
+{
+  "_sobre": "Documentação escrita pelo Claude para os dados simulados da Empresa Demo (python main.py demo). Usada só quando não há ANTHROPIC_API_KEY; com a chave, o Claude escreve os textos na hora a partir dos dados coletados.",
+  "ana.souza@demo.com.br": {
+    "funcao": {
+      "cargo_provavel": "Analista de Contas a Pagar",
+      "resumo": "Responsável pela entrada das notas fiscais de fornecedores no SAP, pela conciliação bancária diária e pelo relatório semanal de despesas. O trabalho é muito concentrado em lançamentos: são cerca de 8 notas por dia, cada uma passando por e-mail, PDF, SAP e planilha de controle. O que foi observado bate com a função cadastrada; a maior parte do tempo repetitivo está na digitação de dados da nota no SAP.",
+      "responsabilidades": [
+        "Lançar no SAP as notas fiscais recebidas por e-mail e manter a planilha de controle de NFs",
+        "Conciliar diariamente o extrato bancário e comunicar o resultado por e-mail",
+        "Gerar e enviar toda sexta-feira o relatório de despesas por centro de custo"
+      ],
+      "sistemas_utilizados": ["SAP", "Excel", "Outlook", "Adobe Acrobat", "Banco Empresas (portal do banco)", "PowerPoint"],
+      "competencias": ["Rotinas de contas a pagar e fiscais", "SAP (módulo financeiro)", "Excel com macros e tabelas dinâmicas", "Atenção a detalhes na conferência de valores"],
+      "recomendacoes": [
+        "Avaliar a leitura automática das notas (XML ou OCR do PDF) para preencher data, referência e montante no SAP sem digitação.",
+        "Investigar a lentidão ocasional do SAP na tela de registro de fatura, que faz algumas notas levarem mais de 8 minutos nessa etapa.",
+        "Agendar a exportação do extrato bancário para que a conciliação comece já com o arquivo na pasta."
+      ]
+    },
+    "processos": {
+      "p1": {
+        "nome": "Lançar notas fiscais de fornecedores",
+        "objetivo": "Registrar no SAP cada nota fiscal recebida por e-mail e manter a planilha de controle de NFs em dia.",
+        "gatilho": "Chegada de um e-mail de fornecedor com a nota fiscal em anexo. Acontece cerca de 8 vezes por dia, de manhã e à tarde.",
+        "responsavel": "Analista de Contas a Pagar",
+        "passos": [
+          {"titulo": "Salvar a nota recebida por e-mail", "sistema": "Outlook", "tempo": "cerca de 1 min 40 s",
+           "descricao": "As notas chegam na caixa de entrada com o assunto “NF número - fornecedor”.",
+           "subpassos": ["Abra o e-mail da nota fiscal na Caixa de Entrada", "Clique em “Salvar todos os anexos” para guardar o PDF da nota"]},
+          {"titulo": "Conferir os dados no PDF da nota", "sistema": "Adobe Acrobat", "tempo": "cerca de 2 min",
+           "descricao": "Abra o PDF salvo e localize as informações que serão lançadas.",
+           "subpassos": ["Abra o arquivo NF_número.pdf", "Use Ctrl+F para buscar o dado necessário (provavelmente número, data e valor da nota)", "Copie a informação com Ctrl+C"]},
+          {"titulo": "Registrar a fatura no SAP", "sistema": "SAP", "tempo": "cerca de 3 min 20 s (pode passar de 8 min quando o sistema está lento)",
+           "descricao": "Na transação “Registrar fatura recebida” da empresa, lance os dados da nota.",
+           "subpassos": ["Preencha a Data da fatura e passe para o próximo campo com Tab", "Preencha a Referência (número da nota)", "Preencha o Montante (valor da nota)", "Escolha o Código do imposto na lista (necessário em quase todas as notas)", "Clique em “Simular” e confira o resultado antes de gravar", "Clique em “Gravar” para registrar a fatura"]},
+          {"titulo": "Atualizar a planilha de controle", "sistema": "Excel", "tempo": "cerca de 2 min",
+           "descricao": "Registre a nota lançada na planilha Controle_NFs do ano.",
+           "subpassos": ["Abra a planilha Controle_NFs_2026.xlsx", "Preencha uma nova linha com os dados da nota lançada", "Salve a planilha (Ctrl+S)"]}
+        ],
+        "entradas": ["E-mail do fornecedor com o PDF da nota fiscal"],
+        "saidas": ["Fatura registrada no SAP", "Linha nova na planilha Controle_NFs_2026.xlsx"],
+        "pontos_de_atencao": [
+          "O botão “Simular” às vezes demora a responder; aguarde o resultado antes de clicar em “Gravar” para não duplicar o lançamento.",
+          "Confira o código do imposto: é o único campo de escolha e afeta o valor registrado.",
+          "Os mesmos dados (data, número e valor) são digitados duas vezes, no SAP e na planilha; confira se coincidem."
+        ],
+        "oportunidades_de_automacao": [
+          "Importar os dados da nota direto do XML ou do PDF para o SAP, eliminando a digitação de 3 campos em cerca de 40 notas por semana.",
+          "Gerar a linha da planilha de controle a partir do lançamento no SAP, em vez de digitar de novo."
+        ],
+        "analise_gargalos": "O gargalo está na etapa do SAP: ela concentra 41% do tempo, depende de digitação manual e tem picos de lentidão. Como a tarefa se repete cerca de 40 vezes por semana, automatizar a entrada dos dados da nota é a melhoria de maior retorno da área."
+      },
+      "p2": {
+        "nome": "Fazer a conciliação bancária",
+        "objetivo": "Conferir os lançamentos do extrato bancário com os registros da empresa e informar o resultado do dia.",
+        "gatilho": "Primeira tarefa do dia, por volta das 8h40.",
+        "responsavel": "Analista de Contas a Pagar",
+        "passos": [
+          {"titulo": "Exportar o extrato no portal do banco", "sistema": "Banco Empresas", "tempo": "cerca de 2 min 20 s",
+           "descricao": "Acesse o portal Banco Empresas (netempresas.bancoexemplo.com.br), na área de extrato.",
+           "subpassos": ["Clique em “Extrato por período” e selecione o período (provavelmente o dia anterior)", "Clique em “Exportar OFX” para baixar o arquivo"]},
+          {"titulo": "Mover o arquivo para a pasta da conciliação", "sistema": "Explorador de Arquivos", "tempo": "cerca de 1 min 30 s",
+           "descricao": "O arquivo baixado fica em Downloads e precisa ir para a pasta usada pela planilha.",
+           "subpassos": ["Na pasta Downloads, recorte o arquivo OFX (Ctrl+X)", "Abra a pasta “Conciliação Bancária” e cole o arquivo (Ctrl+V)"]},
+          {"titulo": "Conciliar na planilha", "sistema": "Excel", "tempo": "cerca de 11 min",
+           "descricao": "A planilha Conciliacao_Bancaria.xlsm tem botões (macros) que fazem a importação e o cruzamento.",
+           "subpassos": ["Abra a planilha Conciliacao_Bancaria.xlsm", "Clique em “Importar extrato”", "Clique em “Conciliar” e aguarde o cruzamento dos lançamentos", "Analise as divergências e registre-as no campo Observações", "Salve a planilha (Ctrl+S)"]},
+          {"titulo": "Enviar o resultado por e-mail", "sistema": "Outlook", "tempo": "cerca de 3 min 20 s",
+           "descricao": "Crie um e-mail com o assunto “Conciliação bancária DD/MM”.",
+           "subpassos": ["Informe os destinatários no campo “Para”", "Escreva o resumo da conciliação e as divergências encontradas", "Clique em “Enviar”"]}
+        ],
+        "entradas": ["Extrato do banco no formato OFX"],
+        "saidas": ["Planilha de conciliação atualizada", "E-mail com o resultado da conciliação do dia"],
+        "pontos_de_atencao": [
+          "A etapa no Excel ocupa 62% do tempo do processo; a análise das divergências é a parte que exige mais atenção.",
+          "Confira se o arquivo OFX é do período correto antes de importar."
+        ],
+        "oportunidades_de_automacao": [
+          "Baixar o extrato automaticamente (integração bancária ou API do banco) e salvá-lo direto na pasta da conciliação.",
+          "Gerar o e-mail de resultado a partir da própria planilha."
+        ],
+        "analise_gargalos": "O tempo se concentra na planilha de conciliação, que já usa macros. A melhoria mais simples é eliminar os passos manuais antes dela (download e cópia do arquivo), que hoje somam cerca de 4 minutos por dia."
+      },
+      "p3": {
+        "nome": "Gerar o relatório semanal de despesas",
+        "objetivo": "Consolidar as despesas da semana por centro de custo e enviar a apresentação de fechamento aos responsáveis.",
+        "gatilho": "Toda sexta-feira, por volta das 15h.",
+        "responsavel": "Analista de Contas a Pagar",
+        "passos": [
+          {"titulo": "Extrair as despesas do SAP", "sistema": "SAP", "tempo": "cerca de 4 min 45 s",
+           "descricao": "Use o relatório de despesas por centro de custo.",
+           "subpassos": ["Preencha o Período com as datas da semana", "Clique em “Executar”", "Clique em “Exportar para planilha”"]},
+          {"titulo": "Montar a análise na planilha", "sistema": "Excel", "tempo": "cerca de 12 min",
+           "descricao": "Abra a planilha da semana (Despesas_Semana_nº).",
+           "subpassos": ["Clique em “Atualizar tudo” para carregar os dados exportados", "Monte ou atualize a tabela dinâmica", "Copie a tabela (Ctrl+C)"]},
+          {"titulo": "Atualizar a apresentação de fechamento", "sistema": "PowerPoint", "tempo": "cerca de 6 min",
+           "descricao": "Use a apresentação Fechamento_Semanal.pptx.",
+           "subpassos": ["Cole a tabela no slide (Ctrl+V)", "Atualize o título com a semana de referência", "Salve a apresentação (Ctrl+S)"]},
+          {"titulo": "Enviar o relatório", "sistema": "Outlook", "tempo": "cerca de 6 min",
+           "descricao": "Crie o e-mail “Relatório semanal de despesas”.",
+           "subpassos": ["Informe os destinatários", "Anexe a apresentação de fechamento", "Escreva o resumo da semana", "Clique em “Enviar”"]}
+        ],
+        "entradas": ["Despesas da semana no SAP"],
+        "saidas": ["Apresentação Fechamento_Semanal.pptx atualizada", "E-mail com o relatório para os responsáveis"],
+        "pontos_de_atencao": ["Confira se o período informado no SAP cobre exatamente a semana (segunda a sexta)."],
+        "oportunidades_de_automacao": ["Ligar a planilha diretamente ao SAP ou a uma ferramenta de BI, para o relatório se atualizar sem exportação manual."],
+        "analise_gargalos": "A etapa da planilha leva 42% do tempo. Com uma conexão direta aos dados, o processo semanal de cerca de 29 minutos poderia cair para poucos minutos de revisão."
+      }
+    }
+  },
+  "bruno.lima@demo.com.br": {
+    "funcao": {
+      "cargo_provavel": "Executivo de Vendas",
+      "resumo": "Transforma os pedidos recebidos dos clientes em ordens de venda no SAP, mantém a previsão de vendas atualizada e apresenta o resultado de metas toda segunda-feira. A maior parte do tempo repetitivo vai para o registro de pedidos, cerca de 7 por dia, que passa por e-mail, CRM e SAP. O que foi observado é mais operacional do que o esperado para um executivo de vendas: boa parte da rotina é entrada de pedidos.",
+      "responsabilidades": [
+        "Registrar no SAP os pedidos recebidos por e-mail e confirmar com o cliente",
+        "Atualizar diariamente a previsão de vendas e compartilhar com a equipe",
+        "Preparar e enviar toda segunda-feira o resultado de metas da semana anterior"
+      ],
+      "sistemas_utilizados": ["CRM Vendas", "SAP", "Excel", "Outlook", "Teams", "PowerPoint"],
+      "competencias": ["Atendimento a clientes", "CRM e SAP (vendas)", "Análise de funil e metas em Excel"],
+      "recomendacoes": [
+        "Integrar o CRM ao SAP para que a ordem de venda seja criada sem redigitar cliente, material e quantidade.",
+        "Verificar a lentidão do CRM ao converter oportunidades em pedido, que às vezes passa de 7 minutos.",
+        "Avaliar se a entrada de pedidos pode ir para uma função de apoio, liberando o executivo para vendas."
+      ]
+    },
+    "processos": {
+      "p1": {
+        "nome": "Registrar pedidos de venda",
+        "objetivo": "Transformar o pedido recebido por e-mail em ordem de venda no SAP e confirmar o registro com o cliente.",
+        "gatilho": "Chegada de um e-mail de pedido de cliente. Acontece cerca de 7 vezes por dia.",
+        "responsavel": "Executivo de Vendas",
+        "passos": [
+          {"titulo": "Abrir o pedido recebido", "sistema": "Outlook", "tempo": "cerca de 1 min",
+           "descricao": "Os pedidos chegam com o assunto “Pedido número - cliente”.",
+           "subpassos": ["Abra o e-mail do pedido na Caixa de Entrada e confira os itens pedidos"]},
+          {"titulo": "Converter a oportunidade em pedido no CRM", "sistema": "CRM Vendas", "tempo": "cerca de 2 min 20 s (pode passar de 7 min quando o CRM está lento)",
+           "descricao": "No CRM Vendas (crm.empresademo.com.br), abra a tela de Oportunidades.",
+           "subpassos": ["Busque o cliente no campo “Buscar cliente” e confirme com Enter", "Clique em “Converter em pedido” e aguarde a geração"]},
+          {"titulo": "Criar a ordem de venda no SAP", "sistema": "SAP", "tempo": "cerca de 2 min 45 s",
+           "descricao": "Na transação “Criar ordem do cliente”, lance o pedido.",
+           "subpassos": ["Preencha o Emissor da ordem (código do cliente)", "Preencha o Material e a Quantidade de cada item e confirme com Enter", "Clique em “Condições” para conferir preços e condições (feito na maioria dos pedidos)", "Clique em “Gravar”"]},
+          {"titulo": "Confirmar o pedido com o cliente", "sistema": "Outlook", "tempo": "cerca de 2 min 45 s",
+           "descricao": "Responda com o e-mail “Confirmação do pedido número”.",
+           "subpassos": ["Informe o cliente no campo “Para”", "Escreva a confirmação com os dados da ordem", "Clique em “Enviar”"]}
+        ],
+        "entradas": ["E-mail do cliente com o pedido"],
+        "saidas": ["Ordem de venda gravada no SAP", "E-mail de confirmação enviado ao cliente"],
+        "pontos_de_atencao": [
+          "A conversão no CRM às vezes demora; aguarde terminar antes de lançar no SAP para não criar o pedido em duplicidade.",
+          "Cliente, material e quantidade são digitados no CRM e de novo no SAP; confira se os dois batem."
+        ],
+        "oportunidades_de_automacao": [
+          "Integrar CRM e SAP para que a ordem seja criada automaticamente ao converter a oportunidade.",
+          "Gerar o e-mail de confirmação a partir da ordem gravada."
+        ],
+        "analise_gargalos": "Há dois pontos de perda: a digitação repetida no SAP e a instabilidade do CRM na conversão. A integração entre CRM e SAP resolve os dois de uma vez e é a prioridade."
+      },
+      "p2": {
+        "nome": "Atualizar a previsão de vendas",
+        "objetivo": "Atualizar a projeção de vendas a partir do funil do CRM e compartilhar com a equipe comercial.",
+        "gatilho": "Primeira tarefa do dia, por volta das 8h40.",
+        "responsavel": "Executivo de Vendas",
+        "passos": [
+          {"titulo": "Exportar o funil do CRM", "sistema": "CRM Vendas", "tempo": "cerca de 2 min 45 s",
+           "descricao": "No CRM, acesse Relatórios.",
+           "subpassos": ["Clique em “Funil por etapa”", "Clique em “Exportar para Excel”"]},
+          {"titulo": "Atualizar a planilha de forecast", "sistema": "Excel", "tempo": "cerca de 5 min 45 s",
+           "descricao": "Abra a planilha Forecast_Comercial.xlsx.",
+           "subpassos": ["Clique em “Atualizar tudo” para carregar o funil exportado", "Ajuste a projeção com as informações do dia", "Salve a planilha (Ctrl+S)"]},
+          {"titulo": "Compartilhar com a equipe", "sistema": "Teams", "tempo": "cerca de 1 min 40 s",
+           "descricao": "No canal Equipe Comercial do Teams.",
+           "subpassos": ["Escreva o resumo da previsão", "Anexe a planilha", "Envie a mensagem (Enter)"]}
+        ],
+        "entradas": ["Funil de oportunidades exportado do CRM"],
+        "saidas": ["Planilha Forecast_Comercial.xlsx atualizada", "Mensagem no canal Equipe Comercial"],
+        "pontos_de_atencao": ["A etapa do Excel ocupa 56% do tempo; os ajustes manuais na projeção são o ponto que mais varia."],
+        "oportunidades_de_automacao": ["Publicar a previsão em um painel ligado ao CRM, dispensando a exportação diária e o envio da planilha."],
+        "analise_gargalos": "O tempo está na planilha. Como o processo é diário e curto, a melhoria vale mais pela padronização da previsão do que pelas horas economizadas."
+      },
+      "p3": {
+        "nome": "Apresentar o resultado de metas",
+        "objetivo": "Levantar o resultado de metas da semana anterior e enviar a apresentação para a reunião comercial.",
+        "gatilho": "Toda segunda-feira, por volta das 14h.",
+        "responsavel": "Executivo de Vendas",
+        "passos": [
+          {"titulo": "Exportar as metas do CRM", "sistema": "CRM Vendas", "tempo": "cerca de 3 min 25 s",
+           "descricao": "No CRM, abra o Painel de metas.",
+           "subpassos": ["Clique em “Filtrar semana anterior”", "Clique em “Exportar para Excel”"]},
+          {"titulo": "Montar o gráfico na planilha", "sistema": "Excel", "tempo": "cerca de 6 min 15 s",
+           "descricao": "Abra a planilha Metas_Semana_nº.",
+           "subpassos": ["Crie ou atualize o “Gráfico Dinâmico”", "Copie o gráfico (Ctrl+C)"]},
+          {"titulo": "Atualizar a apresentação da reunião", "sistema": "PowerPoint", "tempo": "cerca de 5 min 45 s",
+           "descricao": "Use a apresentação Reuniao_Comercial.pptx.",
+           "subpassos": ["Cole o gráfico no slide (Ctrl+V)", "Salve a apresentação (Ctrl+S)"]},
+          {"titulo": "Enviar a apresentação", "sistema": "Outlook", "tempo": "cerca de 2 min",
+           "descricao": "Crie o e-mail “Resultado semanal de metas”.",
+           "subpassos": ["Informe os destinatários", "Anexe a apresentação", "Clique em “Enviar”"]}
+        ],
+        "entradas": ["Painel de metas do CRM"],
+        "saidas": ["Apresentação Reuniao_Comercial.pptx atualizada", "E-mail com o resultado de metas"],
+        "pontos_de_atencao": ["Confira se o filtro do CRM está na semana anterior completa antes de exportar."],
+        "oportunidades_de_automacao": ["Usar o próprio painel de metas do CRM na reunião, sem montar o gráfico no Excel e no PowerPoint."],
+        "analise_gargalos": "A planilha concentra 36% do tempo. É um processo semanal e curto; a principal oportunidade é eliminar a cópia do gráfico entre três programas."
+      }
+    }
+  }
+}
